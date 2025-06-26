@@ -5,4 +5,13 @@ python-dotenv==1.1.1
 setuptools==80.9.0
 sqlparse==0.5.3
 tzdata==2025.2
-wheel==0.45.1 
+wheel==0.45.1
+
+# Testing dependencies
+pytest==8.0.0
+pytest-django==4.8.0
+pytest-cov==4.1.0
+
+# Code quality
+black==24.1.1
+flake8==7.0.0 

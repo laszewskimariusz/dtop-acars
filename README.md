@@ -57,6 +57,56 @@ Django project for ACARS (Aircraft Communications Addressing and Reporting Syste
 
    The application will be available at http://127.0.0.1:8000/
 
+## Development
+
+### Running Tests
+```bash
+# Run Django tests
+cd topsky
+python manage.py test
+
+# Run with pytest (recommended)
+pytest
+
+# Run with coverage
+pytest --cov=.
+```
+
+### Code Quality
+```bash
+# Format code with black
+black .
+
+# Check code style with flake8
+flake8 .
+
+# Run all checks
+black . && flake8 . && pytest
+```
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **Test Workflow** (`.github/workflows/test.yml`): Runs on every push and pull request
+  - Installs dependencies
+  - Runs Django tests
+  - Checks code formatting
+  - Runs security checks
+
+- **Deploy Workflow** (`.github/workflows/deploy.yml`): Runs on pushes to main branch
+  - Runs all tests
+  - Collects static files
+  - Deploys to production (configure as needed)
+
+### Required GitHub Secrets
+
+For deployment, you'll need to set up these secrets in your GitHub repository:
+
+- `DJANGO_SECRET_KEY`: Your Django secret key
+- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+- `DATABASE_URL`: Your production database URL
+
 ## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
@@ -74,7 +124,14 @@ dtop-acars/
 ├── .gitignore          # Git ignore rules
 ├── requirements.txt    # Python dependencies
 ├── README.md          # This file
+├── pytest.ini        # Pytest configuration
+├── pyproject.toml    # Black configuration
+├── .flake8           # Flake8 configuration
 ├── venv/              # Virtual environment
+├── .github/           # GitHub Actions workflows
+│   └── workflows/
+│       ├── test.yml   # Test workflow
+│       └── deploy.yml # Deploy workflow
 └── topsky/            # Django project
     ├── manage.py      # Django management script
     ├── db.sqlite3     # SQLite database
@@ -97,3 +154,6 @@ dtop-acars/
 - The project uses Django 5.2.3
 - SQLite database for development
 - Virtual environment for dependency isolation
+- Automated testing with pytest
+- Code formatting with black
+- Linting with flake8

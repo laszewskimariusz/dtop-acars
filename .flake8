@@ -1,0 +1,31 @@
+[flake8]
+max-line-length = 88
+extend-ignore = E203, W503
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    .env,
+    .env.example,
+    *.pyc,
+    *.pyo,
+    *.pyd,
+    .Python,
+    build,
+    develop-eggs,
+    dist,
+    downloads,
+    eggs,
+    .eggs,
+    lib,
+    lib64,
+    parts,
+    sdist,
+    var,
+    wheels,
+    share/python-wheels,
+    *.egg-info,
+    .installed.cfg,
+    *.egg,
+    MANIFEST 
