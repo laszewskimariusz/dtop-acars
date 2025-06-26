@@ -12,4 +12,4 @@ ENV DJANGO_SETTINGS_MODULE=topsky.settings
 # Ustaw port, jeśli korzystasz z runserver
 EXPOSE 8000
 
-CMD ["python", "topsky/manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "topsky.wsgi:application"]
