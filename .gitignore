@@ -191,4 +191,6 @@ Thumbs.db
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+topsky/__init__.py 
