@@ -48,5 +48,9 @@ jobs:
           cd argo-manifest
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "ci: update dtopsky image to tag ${TAG}"
-          git push 
+          if git diff --quiet; then
+            echo "No changes to commit";
+          else
+            git commit -am "ci: update dtopsky image to tag ${TAG}"
+            git push
+          fi 
