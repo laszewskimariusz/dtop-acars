@@ -55,6 +55,15 @@ jobs:
             git push
           fi
 
+      - name: Create dtopsky-secrets in K8s
+        run: |
+          export KUBECONFIG=$PWD/kubeconfig.yaml
+          kubectl delete secret dtopsky-secrets -n dtopsky --ignore-not-found
+          kubectl create secret generic dtopsky-secrets \
+            --from-literal=SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+            --from-literal=ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" \
+            -n dtopsky
+
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
