@@ -2,8 +2,8 @@ name: Deploy Django App
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    tags:
+      - '*'  # Trigger only on version tags
 
 jobs:
   docker:
