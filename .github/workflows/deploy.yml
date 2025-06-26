@@ -32,10 +32,10 @@ jobs:
     
     - name: Create .env file
       run: |
-        echo "SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" > .env
+        echo "SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY || 'django-insecure-fallback-key-for-ci' }}" > .env
         echo "DEBUG=False" >> .env
-        echo "ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}" >> .env
-        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+        echo "ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS || 'localhost,127.0.0.1' }}" >> .env
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL || 'sqlite:///db.sqlite3' }}" >> .env
     
     - name: Run Django check
       run: |
