@@ -30,4 +30,23 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build -t harbor.zatto-lab.cloud/d-topsky/d-topsky:${{ env.TAG }} .
-          docker push harbor.zatto-lab.cloud/d-topsky/d-topsky:${{ env.TAG }} 
+          docker push harbor.zatto-lab.cloud/d-topsky/d-topsky:${{ env.TAG }}
+
+      - name: Checkout argo-manifest repo
+        uses: actions/checkout@v3
+        with:
+          repository: laszewskimariusz/argo-manifest
+          token: ${{ secrets.GH_PAT }}
+          path: argo-manifest
+
+      - name: Update manifest with new image tag
+        run: |
+          sed -i "s|image: harbor.zatto-lab.cloud/d-topsky/d-topsky:.*|image: harbor.zatto-lab.cloud/d-topsky/d-topsky:${TAG}|" argo-manifest/apps/dtopsky/deployment.yaml
+
+      - name: Commit and push update to argo-manifest
+        run: |
+          cd argo-manifest
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "ci: update dtopsky image to tag ${TAG}"
+          git push 
