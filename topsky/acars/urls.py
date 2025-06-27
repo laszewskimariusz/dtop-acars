@@ -8,5 +8,6 @@ router.register(r'messages', ACARSMessageViewSet, basename='acarsmessage')
 urlpatterns = [
     path('', acars_dashboard, name='acars_dashboard'),
     path('webhook/', smartcars_webhook, name='smartcars_webhook'),
+    path('webhook', smartcars_webhook, name='smartcars_webhook_no_slash'),  # For apps that don't handle redirects
     path('api/', include(router.urls)),
 ] 
