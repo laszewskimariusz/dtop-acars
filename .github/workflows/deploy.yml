@@ -73,6 +73,14 @@ jobs:
             --from-literal=DEBUG="${{ env.DEBUG }}" \
             -n dtopsky
 
+      - name: Write kubeconfig to file
+        run: echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+
+      - name: Use kubectl with kubeconfig
+        run: |
+          export KUBECONFIG=$PWD/kubeconfig.yaml
+          kubectl get pods -A
+
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
