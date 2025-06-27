@@ -270,3 +270,48 @@ def smartcars_basic_data(request):
             ]
         }
     })
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def smartcars_schedules(request):
+    """
+    SmartCARS schedules endpoint - flight schedules
+    """
+    # Mock flight schedules data for smartCARS
+    return JsonResponse({
+        "success": True,
+        "data": [
+            {
+                "id": 1,
+                "code": "LO123",
+                "flight_number": "123", 
+                "route_code": "EPWA-EPKK",
+                "airline_id": 1,
+                "aircraft_id": 1,
+                "dpt_airport_id": "EPWA",
+                "arr_airport_id": "EPKK", 
+                "dpt_time": "08:00",
+                "arr_time": "09:30",
+                "flight_time": "01:30",
+                "distance": 252,
+                "route": "EPWA DCT EPKK",
+                "active": True
+            },
+            {
+                "id": 2,
+                "code": "LO456",
+                "flight_number": "456",
+                "route_code": "EPKK-EPWA", 
+                "airline_id": 1,
+                "aircraft_id": 1,
+                "dpt_airport_id": "EPKK",
+                "arr_airport_id": "EPWA",
+                "dpt_time": "10:00", 
+                "arr_time": "11:30",
+                "flight_time": "01:30",
+                "distance": 252,
+                "route": "EPKK DCT EPWA",
+                "active": True
+            }
+        ]
+    })
