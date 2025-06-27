@@ -27,9 +27,16 @@ def smartcars_webhook(request):
         # smartCARS 3 expects specific API format
         return JsonResponse({
             "apiVersion": "1.0.0",
-            "handlerName": "Django ACARS",
-            "status": "active",
-            "response": "ok"
+            "handlerName": "Django ACARS Handler",
+            "handlerVersion": "1.0.0", 
+            "handlerAuthor": "Django ACARS System",
+            "handlerWebsite": "https://dtopsky.topsky.app",
+            "status": "success",
+            "response": "Handler is active and ready",
+            "data": {
+                "platform": "Django",
+                "features": ["ACARS", "Position Reporting", "Flight Tracking"]
+            }
         })
     
     try:
