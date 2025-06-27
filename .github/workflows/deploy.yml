@@ -13,6 +13,7 @@ jobs:
       KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DEBUG: "False"
 
     steps:
@@ -68,6 +69,7 @@ jobs:
           kubectl create secret generic dtopsky-secrets \
             --from-literal=SECRET_KEY="${{ env.SECRET_KEY }}" \
             --from-literal=ALLOWED_HOSTS="${{ env.ALLOWED_HOSTS }}" \
+            --from-literal=DATABASE_URL="${{ env.DATABASE_URL }}" \
             --from-literal=DEBUG="${{ env.DEBUG }}" \
             -n dtopsky
 
