@@ -8,6 +8,9 @@ sqlparse==0.5.3
 tzdata==2025.2
 wheel==0.45.1
 
+# Tailwind CSS
+django-tailwind==3.8.0
+
 # Testing dependencies
 pytest==8.0.0
 pytest-django==4.8.0

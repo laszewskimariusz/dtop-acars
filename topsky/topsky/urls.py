@@ -15,13 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from django.http import HttpResponse
-
-def home(request):
-    return HttpResponse("Hello, this is the homepage!")
+from django.urls import path, include
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home, name='home'),  # <-- to obsługuje stronę główną
+    path('', include('landing.urls')),
 ]
+
+# Add django_browser_reload URLs in development
+if settings.DEBUG:
+    urlpatterns += [
+        path('__reload__/', include('django_browser_reload.urls')),
+    ]

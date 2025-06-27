@@ -1,0 +1,625 @@
+{% extends 'landing/base.html' %}
+{% load static %}
+
+{% block title %}Topsky Virtual Airlines - Premier Virtual Airline Experience{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Custom animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.delay-200 { animation-delay: 0.2s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-800 { animation-delay: 0.8s; }
+
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-1000 { animation-delay: 1000ms; }
+
+/* Grid pattern */
+.grid-pattern {
+    background-image: 
+        linear-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #22d3ee, #3b82f6, #8b5cf6);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Glassmorphism */
+.glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Import Navigation -->
+{% include 'landing/menu.html' %}
+
+<!-- HERO SECTION -->
+<section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden z-0">
+    <!-- Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950"></div>
+    <div class="absolute inset-0 grid-pattern opacity-20"></div>
+    
+    <!-- Floating particles -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-cyan-400 rounded-full animate-float"></div>
+        <div class="absolute top-1/3 right-1/4 w-1 h-1 bg-blue-400 rounded-full animate-float delay-200"></div>
+        <div class="absolute bottom-1/3 left-1/3 w-1.5 h-1.5 bg-purple-400 rounded-full animate-float delay-400"></div>
+    </div>
+    
+    <!-- Content -->
+    <div class="relative z-10 text-center px-4 max-w-6xl mx-auto">
+        <!-- Logo -->
+        <div class="mb-8 animate-fade-in-up">
+            <img src="{% static 'landing/images/logo-pax.png' %}" alt="Topsky Airlines Logo" 
+                 class="w-36 mx-auto animate-float drop-shadow-2xl">
+        </div>
+        
+        <!-- Title -->
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black mb-6 animate-fade-in-up delay-200">
+            <span class="gradient-text">Topsky</span>
+            <br>
+            <span class="text-white">Virtual Airlines</span>
+        </h1>
+        
+        <!-- Subtitle -->
+        <p class="text-xl md:text-2xl text-slate-300 mb-8 max-w-4xl mx-auto leading-relaxed animate-fade-in-up delay-400">
+            Experience the ultimate virtual aviation journey. Join the premier virtual airline and explore the world from a pilot's perspective.
+        </p>
+        
+        <!-- Features highlights -->
+        <div class="flex flex-wrap justify-center gap-4 mb-8 animate-fade-in-up delay-600">
+            <span class="glass px-4 py-2 rounded-full text-sm text-cyan-300 border border-cyan-400/30">
+                <i class="fas fa-plane mr-2"></i>Realistic Flight Operations
+            </span>
+            <span class="glass px-4 py-2 rounded-full text-sm text-blue-300 border border-blue-400/30">
+                <i class="fas fa-globe mr-2"></i>Worldwide Routes
+            </span>
+            <span class="glass px-4 py-2 rounded-full text-sm text-purple-300 border border-purple-400/30">
+                <i class="fas fa-users mr-2"></i>Professional Community
+            </span>
+        </div>
+        
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-800">
+            <a href="#join" class="group bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold px-8 py-4 rounded-xl shadow-2xl transition-all transform hover:scale-105 hover:shadow-cyan-500/25">
+                <span class="mr-2">Start Your Journey</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </a>
+            <a href="#stats" class="border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 font-bold px-8 py-4 rounded-xl transition-all hover:shadow-lg hover:shadow-cyan-400/25">
+                <span class="mr-2">Explore More</span>
+                <i class="fas fa-chevron-down"></i>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div class="w-6 h-10 border-2 border-cyan-400 rounded-full flex justify-center">
+            <div class="w-1 h-3 bg-cyan-400 rounded-full mt-2 animate-pulse"></div>
+        </div>
+    </div>
+</section>
+
+<!-- STATISTICS SECTION -->
+<section id="stats" class="py-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-10 left-10 text-8xl text-cyan-500">
+            <i class="fas fa-plane"></i>
+        </div>
+        <div class="absolute bottom-10 right-10 text-8xl text-blue-500">
+            <i class="fas fa-globe"></i>
+        </div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-4 relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-slate-800 dark:text-white mb-4">
+                Our Achievements
+            </h2>
+            <p class="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-6">
+                Join thousands of virtual pilots who trust Topsky Airlines for their aviation adventures
+            </p>
+            <div class="w-20 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto rounded-full"></div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Flights -->
+            <div class="group glass dark:bg-slate-800/50 bg-white/50 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border border-slate-200 dark:border-slate-700">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-plane text-white text-2xl"></i>
+                    </div>
+                    <div class="text-4xl font-black text-slate-800 dark:text-white mb-2" id="flights-counter">0</div>
+                    <div class="text-slate-600 dark:text-slate-300 font-medium">Total Flights</div>
+                    <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">And counting...</div>
+                </div>
+            </div>
+            
+            <!-- Passengers -->
+            <div class="group glass dark:bg-slate-800/50 bg-white/50 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border border-slate-200 dark:border-slate-700">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-users text-white text-2xl"></i>
+                    </div>
+                    <div class="text-4xl font-black text-slate-800 dark:text-white mb-2" id="passengers-counter">0</div>
+                    <div class="text-slate-600 dark:text-slate-300 font-medium">Passengers Transported</div>
+                    <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">Safely delivered</div>
+                </div>
+            </div>
+            
+            <!-- Cargo -->
+            <div class="group glass dark:bg-slate-800/50 bg-white/50 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border border-slate-200 dark:border-slate-700">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-box text-white text-2xl"></i>
+                    </div>
+                    <div class="text-4xl font-black text-slate-800 dark:text-white mb-2" id="cargo-counter">0</div>
+                    <div class="text-slate-600 dark:text-slate-300 font-medium">Cargo Hauled (tons)</div>
+                    <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">Freight operations</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CURRENT FLIGHTS MAP SECTION -->
+<section id="flights-map" class="py-20 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 relative overflow-hidden">
+    <!-- Background elements -->
+    <div class="absolute inset-0 grid-pattern opacity-5"></div>
+    
+    <div class="max-w-6xl mx-auto px-4 relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                Current Flights
+            </h2>
+            <p class="text-lg text-slate-300 max-w-2xl mx-auto mb-6">
+                Track our pilots flying around the world in real-time
+            </p>
+            <div class="w-20 h-1 bg-gradient-to-r from-cyan-400 to-blue-400 mx-auto rounded-full"></div>
+        </div>
+        
+        <!-- Map Placeholder -->
+        <div class="glass rounded-2xl p-8 border border-slate-700 relative min-h-[500px] bg-slate-900/50">
+            <!-- Map will be integrated here -->
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                        <i class="fas fa-globe text-white text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Interactive Flight Map</h3>
+                    <p class="text-slate-400 mb-6 max-w-md">
+                        Real-time tracking of all active flights across our global network
+                    </p>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-center space-x-2 text-sm text-slate-300">
+                            <i class="fas fa-plane text-cyan-400"></i>
+                            <span>12 Active Flights</span>
+                        </div>
+                        <div class="flex items-center justify-center space-x-2 text-sm text-slate-300">
+                            <i class="fas fa-users text-emerald-400"></i>
+                            <span>47 Pilots Online</span>
+                        </div>
+                        <div class="flex items-center justify-center space-x-2 text-sm text-slate-300">
+                            <i class="fas fa-route text-purple-400"></i>
+                            <span>245 Routes Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div class="absolute top-4 left-4">
+                <div class="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+            </div>
+            <div class="absolute top-1/3 right-1/4">
+                <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping animation-delay-500"></div>
+            </div>
+            <div class="absolute bottom-1/4 left-1/3">
+                <div class="w-1 h-1 bg-purple-400 rounded-full animate-ping animation-delay-1000"></div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div class="glass rounded-xl p-4 text-center border border-slate-700">
+                <div class="text-2xl font-bold text-cyan-400 mb-1">15</div>
+                <div class="text-sm text-slate-300">Flights Today</div>
+            </div>
+            <div class="glass rounded-xl p-4 text-center border border-slate-700">
+                <div class="text-2xl font-bold text-emerald-400 mb-1">8.2h</div>
+                <div class="text-sm text-slate-300">Average Flight Time</div>
+            </div>
+            <div class="glass rounded-xl p-4 text-center border border-slate-700">
+                <div class="text-2xl font-bold text-purple-400 mb-1">98.5%</div>
+                <div class="text-sm text-slate-300">On-Time Performance</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TEAM SECTION -->
+<section id="team" class="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
+    <!-- Background elements -->
+    <div class="absolute inset-0 grid-pattern opacity-10"></div>
+    
+    <div class="max-w-6xl mx-auto px-4 relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                Meet Our Leadership Team
+            </h2>
+            <p class="text-lg text-slate-300 max-w-2xl mx-auto mb-6">
+                Experienced aviation professionals dedicated to providing the best virtual airline experience
+            </p>
+            <div class="w-20 h-1 bg-gradient-to-r from-cyan-400 to-blue-400 mx-auto rounded-full"></div>
+        </div>
+        
+        <!-- Team Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Member 1 -->
+            <div class="glass rounded-2xl p-6 text-center border border-slate-700 hover:border-cyan-400/50 transition-all group">
+                <div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl group-hover:scale-110 transition-transform">
+                    👨‍✈️
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">Jan Kowalski</h3>
+                <p class="text-cyan-400 font-semibold mb-2">CEO & Founder</p>
+                <p class="text-slate-300 text-sm">15+ years in aviation industry</p>
+                <div class="flex justify-center space-x-2 mt-3">
+                    <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                </div>
+            </div>
+            
+            <!-- Member 2 -->
+            <div class="glass rounded-2xl p-6 text-center border border-slate-700 hover:border-emerald-400/50 transition-all group">
+                <div class="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl group-hover:scale-110 transition-transform">
+                    👩‍✈️
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">Anna Nowak</h3>
+                <p class="text-emerald-400 font-semibold mb-2">Operations Manager</p>
+                <p class="text-slate-300 text-sm">Flight planning expert</p>
+                <div class="flex justify-center space-x-2 mt-3">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-teal-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                </div>
+            </div>
+            
+            <!-- Member 3 -->
+            <div class="glass rounded-2xl p-6 text-center border border-slate-700 hover:border-purple-400/50 transition-all group">
+                <div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl group-hover:scale-110 transition-transform">
+                    👨‍💻
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">Michał Wiśniewski</h3>
+                <p class="text-purple-400 font-semibold mb-2">Technical Director</p>
+                <p class="text-slate-300 text-sm">Aviation technology specialist</p>
+                <div class="flex justify-center space-x-2 mt-3">
+                    <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-pink-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-purple-400 rounded-full"></span>
+                </div>
+            </div>
+            
+            <!-- Member 4 -->
+            <div class="glass rounded-2xl p-6 text-center border border-slate-700 hover:border-rose-400/50 transition-all group">
+                <div class="w-20 h-20 bg-gradient-to-br from-rose-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl group-hover:scale-110 transition-transform">
+                    👩‍💼
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">Ewa Kowalczyk</h3>
+                <p class="text-rose-400 font-semibold mb-2">Community Manager</p>
+                <p class="text-slate-300 text-sm">Pilot community liaison</p>
+                <div class="flex justify-center space-x-2 mt-3">
+                    <span class="w-2 h-2 bg-rose-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-orange-400 rounded-full"></span>
+                    <span class="w-2 h-2 bg-rose-400 rounded-full"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- JOIN SECTION -->
+<section id="join" class="py-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 relative overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-9xl text-cyan-500">
+            <i class="fas fa-paper-plane"></i>
+        </div>
+    </div>
+    
+    <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+        <h2 class="text-4xl md:text-5xl font-bold text-slate-800 dark:text-white mb-6">
+            Ready for Takeoff?
+        </h2>
+        <p class="text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
+            Join Topsky Virtual Airlines today and begin your journey as a virtual pilot in our professional community.
+        </p>
+        
+        <!-- Benefits -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass dark:bg-slate-800/30 bg-white/30 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                <i class="fas fa-certificate text-cyan-500 text-2xl mb-2"></i>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Professional Training</p>
+            </div>
+            <div class="glass dark:bg-slate-800/30 bg-white/30 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                <i class="fas fa-route text-blue-500 text-2xl mb-2"></i>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Global Route Network</p>
+            </div>
+            <div class="glass dark:bg-slate-800/30 bg-white/30 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                <i class="fas fa-trophy text-purple-500 text-2xl mb-2"></i>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Achievement System</p>
+            </div>
+        </div>
+        
+        <a href="#" class="inline-block bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold px-12 py-4 rounded-xl shadow-2xl transition-all transform hover:scale-105 hover:shadow-cyan-500/25">
+            <span class="mr-2">Join Our Crew</span>
+            <i class="fas fa-plane"></i>
+        </a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-slate-950 border-t border-slate-800 py-12">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <!-- Brand -->
+            <div class="md:col-span-2">
+                <div class="flex items-center space-x-3 mb-4">
+                    <img src="{% static 'landing/images/logo-pax.png' %}" alt="Topsky Airlines Logo" 
+                         class="w-9 rounded">
+                    <span class="font-bold text-lg bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                        Topsky Virtual Airlines
+                    </span>
+                </div>
+                <p class="text-slate-400 max-w-md">
+                    Experience the ultimate virtual aviation journey with professional flight operations and a dedicated community of pilots.
+                </p>
+            </div>
+            
+            <!-- Quick Links -->
+            <div>
+                <h4 class="text-white font-semibold mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-slate-400">
+                    <li><a href="#home" class="hover:text-cyan-400 transition-colors">Home</a></li>
+                    <li><a href="#stats" class="hover:text-cyan-400 transition-colors">Statistics</a></li>
+                    <li><a href="#flights-map" class="hover:text-cyan-400 transition-colors">Live Map</a></li>
+                    <li><a href="#team" class="hover:text-cyan-400 transition-colors">Team</a></li>
+                    <li><a href="#join" class="hover:text-cyan-400 transition-colors">Join Us</a></li>
+                </ul>
+            </div>
+            
+            <!-- Contact -->
+            <div>
+                <h4 class="text-white font-semibold mb-4">Connect</h4>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-slate-400 hover:text-cyan-400 transition-colors">
+                        <i class="fab fa-discord text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-400 hover:text-cyan-400 transition-colors">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-400 hover:text-cyan-400 transition-colors">
+                        <i class="fab fa-facebook text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Copyright -->
+        <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between">
+            <div class="text-slate-400 text-center md:text-left mb-4 md:mb-0">
+                &copy; 2024 Topsky Virtual Airlines. All rights reserved.
+            </div>
+            <div class="text-slate-500 text-sm">
+                Made with ❤️ for virtual aviation enthusiasts
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+// Mobile menu toggle
+document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('hidden');
+});
+
+// Counter animation with easing
+function animateCounter(element, target, duration = 2500) {
+    let start = 0;
+    const startTime = performance.now();
+    
+    function easeOutQuart(t) {
+        return 1 - (--t) * t * t * t;
+    }
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeOutQuart(progress);
+        const current = Math.floor(start + (target - start) * easedProgress);
+        
+        element.textContent = current.toLocaleString();
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Enhanced Intersection Observer for counters
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.classList.contains('animated')) {
+            entry.target.classList.add('animated');
+            
+            // Add a slight delay for better visual effect
+            setTimeout(() => {
+                if (entry.target.id === 'flights-counter') {
+                    animateCounter(entry.target, 15420);
+                } else if (entry.target.id === 'passengers-counter') {
+                    animateCounter(entry.target, 284750);
+                } else if (entry.target.id === 'cargo-counter') {
+                    animateCounter(entry.target, 1250);
+                }
+            }, 200);
+        }
+    });
+}, { threshold: 0.5 });
+
+// Observe counters
+document.querySelectorAll('[id$="-counter"]').forEach(counter => {
+    observer.observe(counter);
+});
+
+// Enhanced smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            const headerOffset = 80;
+            const elementPosition = target.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Close mobile menu
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+        }
+    });
+});
+
+// Add scroll effect to navigation and hero section
+window.addEventListener('scroll', function() {
+    const nav = document.querySelector('nav');
+    const hero = document.querySelector('#home');
+    const scrolled = window.pageYOffset;
+    
+    // Navigation background effect
+    if (scrolled > 50) {
+        nav.classList.add('bg-slate-950/95');
+        nav.classList.remove('bg-slate-950/80');
+    } else {
+        nav.classList.add('bg-slate-950/80');
+        nav.classList.remove('bg-slate-950/95');
+    }
+    
+    // Hero parallax and fade effect
+    if (hero) {
+        // Parallax effect - hero moves slower than scroll
+        hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+        
+        // Smooth fade out effect with longer transition
+        const fadeStart = 200;
+        const fadeEnd = 800; // Increased for smoother transition
+        
+        if (scrolled <= fadeStart) {
+            hero.style.opacity = '1';
+            hero.style.transition = 'opacity 0.3s ease-out';
+        } else if (scrolled >= fadeEnd) {
+            hero.style.opacity = '0';
+            hero.style.transition = 'opacity 0.3s ease-out';
+        } else {
+            // Smooth opacity transition with quadratic easing
+            const fadeProgress = (scrolled - fadeStart) / (fadeEnd - fadeStart);
+            const opacity = 1 - (fadeProgress * fadeProgress); // Quadratic easing for smoother transition
+            hero.style.opacity = opacity.toString();
+            hero.style.transition = 'opacity 0.3s ease-out';
+        }
+    }
+});
+</script>
+{% endblock %}

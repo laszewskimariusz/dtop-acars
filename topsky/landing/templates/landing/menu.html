@@ -1,0 +1,44 @@
+{% load static %}
+
+<!-- NAVIGATION -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <img src="{% static 'landing/images/logo-pax.png' %}" alt="Topsky Airlines Logo" 
+                     class="w-12 drop-shadow-lg">
+                <span class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    Topsky Airlines
+                </span>
+            </div>
+            
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Home</a>
+                <a href="#stats" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Statistics</a>
+                <a href="#flights-map" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Live Map</a>
+                <a href="#team" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Team</a>
+                <a href="#join" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-2 rounded-lg font-semibold transition-all transform hover:scale-105">
+                    Join Us
+                </a>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-slate-300 hover:text-cyan-400" id="mobile-menu-btn">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 bg-slate-900/95 backdrop-blur-xl rounded-lg mt-2 border border-slate-800">
+                <a href="#home" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Home</a>
+                <a href="#stats" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Statistics</a>
+                <a href="#flights-map" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Live Map</a>
+                <a href="#team" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Team</a>
+                <a href="#join" class="block mx-3 my-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold text-center">Join Us</a>
+            </div>
+        </div>
+    </div>
+</nav> 
