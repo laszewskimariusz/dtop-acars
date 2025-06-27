@@ -12,7 +12,7 @@ class ACARSMessage(models.Model):
 
     # 2. Identyfikacja lotu i trasa
     aircraft_id   = models.CharField(max_length=10, help_text="Rejestracja statku powietrznego")
-    flight_number = models.CharField(max_length=10, help_text="Numer lotu")
+    flight_number = models.CharField(max_length=10, blank=True, help_text="Numer lotu")
     route         = models.CharField(max_length=50, blank=True, help_text="Trasa: np. 'WAW-JFK'")
 
     # 3. Pozycja i ruch
@@ -72,4 +72,4 @@ class ACARSMessage(models.Model):
         verbose_name_plural = "Komunikaty ACARS"
 
     def __str__(self):
-        return f"{self.flight_number} ({self.aircraft_id}) – {self.direction} @ {self.timestamp}"
+        return f"{self.flight_number or self.aircraft_id} ({self.aircraft_id}) – {self.direction} @ {self.timestamp}"
