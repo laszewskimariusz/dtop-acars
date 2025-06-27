@@ -17,10 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('accounts.urls')),
+    
+    # URL aliases for Django's password reset email templates (without namespace)
+    path('reset/<uidb64>/<token>/', 
+         auth_views.PasswordResetConfirmView.as_view(template_name='accounts/password_reset_confirm.html'),
+         name='password_reset_confirm'),
+    
     path('', include('landing.urls')),
 ]
 
