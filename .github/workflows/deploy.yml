@@ -9,15 +9,34 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     environment: HARBOR
-    # ustawiamy KUBECONFIG raz na cały job
     env:
+      # kubeconfig + Django secrets dostępne we wszystkich krokach
       KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      DEBUG: "False"
 
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v4
 
-      # … pozostałe kroki do build/push obrazu …
+      - name: Extract tag
+        id: vars
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Harbor
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+        run: echo "${{ env.HARBOR_PASSWORD }}" | docker login harbor.zatto-lab.cloud -u "${{ env.HARBOR_USERNAME }}" --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t harbor.zatto-lab.cloud/d-topsky/d-topsky:${{ env.TAG }} .
+          docker push harbor.zatto-lab.cloud/d-topsky/d-topsky:${{ env.TAG }}
 
       - name: Checkout argo-manifest repo
         uses: actions/checkout@v4
@@ -26,31 +45,44 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: argo-manifest
 
-      # … aktualizacja manifestu i commit/push …
+      - name: Update manifest with new image tag
+        run: |
+          sed -i "s|image: harbor.zatto-lab.cloud/d-topsky/d-topsky:.*|image: harbor.zatto-lab.cloud/d-topsky/d-topsky:${{ env.TAG }}|" argo-manifest/apps/dtopsky/deployment.yaml
 
-      # <-- kolejność ważna: najpierw zapisujemy kubeconfig
+      - name: Update deployment with environment variables from secret
+        run: |
+          if ! grep -q "envFrom:" argo-manifest/apps/dtopsky/deployment.yaml; then
+            awk '/containers:/ { print; print "        envFrom:"; print "        - secretRef:"; print "            name: dtopsky-secrets"; next } 1' \
+              argo-manifest/apps/dtopsky/deployment.yaml > temp_deployment.yaml && mv temp_deployment.yaml argo-manifest/apps/dtopsky/deployment.yaml
+          fi
+
+      - name: Commit and push update to argo-manifest
+        run: |
+          cd argo-manifest
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -am "ci: update dtopsky image to tag ${{ env.TAG }} and add secret env vars"
+            git push
+          fi
+
       - name: Write kubeconfig to file
         run: |
           cat <<EOF > "$KUBECONFIG"
-          ${{ secrets.KUBECONFIG }}
-          EOF
+${{ secrets.KUBECONFIG }}
+EOF
 
       - name: Create dtopsky-secrets in K8s
         run: |
-          # dzięki KUBECONFIG wskazanemu wyżej, kubectl będzie używać poprawnego pliku
           kubectl delete secret dtopsky-secrets -n dtopsky --ignore-not-found
           kubectl create secret generic dtopsky-secrets \
-            --from-literal=SECRET_KEY="${{ secrets.SECRET_KEY }}" \
-            --from-literal=ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" \
-            --from-literal=DEBUG="False" \
+            --from-literal=SECRET_KEY="${{ env.SECRET_KEY }}" \
+            --from-literal=ALLOWED_HOSTS="${{ env.ALLOWED_HOSTS }}" \
+            --from-literal=DEBUG="${{ env.DEBUG }}" \
             -n dtopsky
 
       - name: Verify deployment
         run: |
           kubectl get pods -n dtopsky
-
-
-    env:
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-      DEBUG: "False"
