@@ -14,7 +14,8 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DEBUG: "False"
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      DEBUG: "True"
 
     steps:
       - name: Checkout source repo
@@ -70,6 +71,7 @@ jobs:
             --from-literal=SECRET_KEY="${{ env.SECRET_KEY }}" \
             --from-literal=ALLOWED_HOSTS="${{ env.ALLOWED_HOSTS }}" \
             --from-literal=DATABASE_URL="${{ env.DATABASE_URL }}" \
+            --from-literal=RESEND_API_KEY="${{ env.RESEND_API_KEY }}" \
             --from-literal=DEBUG="${{ env.DEBUG }}" \
             -n dtopsky
 
