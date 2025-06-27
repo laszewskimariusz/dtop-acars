@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACARS Dashboard - Smartcars 3</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .login-form {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 50px auto;
+        }
+        .acars-panel {
+            display: none;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+        .messages-section, .controls-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .controls-section {
+            height: fit-content;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+        button {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #1e3c72;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .messages-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .messages-table th,
+        .messages-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .messages-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .direction-in { color: #28a745; font-weight: 600; }
+        .direction-out { color: #dc3545; font-weight: 600; }
+        .message-payload {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .message-details {
+            display: none;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .quick-templates {
+            margin-bottom: 15px;
+        }
+        .template-btn {
+            background: #17a2b8;
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .template-btn:hover {
+            background: #138496;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛩️ ACARS Dashboard - Smartcars 3</h1>
+            <p>Aircraft Communications Addressing and Reporting System</p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginForm" class="login-form">
+            <h2>Logowanie do systemu ACARS</h2>
+            <form>
+                <div class="form-group">
+                    <label for="username">Nazwa użytkownika:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Hasło:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit">Zaloguj się</button>
+            </form>
+            <div id="loginStatus" class="status"></div>
+        </div>
+
+        <!-- ACARS Panel -->
+        <div id="acarsPanel" class="acars-panel">
+            <div class="messages-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>Komunikaty ACARS</h2>
+                    <button id="refreshBtn" class="btn-secondary" style="width: auto;">🔄 Odśwież</button>
+                </div>
+                
+                <div id="messagesStatus" class="status"></div>
+                
+                <table class="messages-table">
+                    <thead>
+                        <tr>
+                            <th>Czas</th>
+                            <th>Kierunek</th>
+                            <th>Lot</th>
+                            <th>Samolot</th>
+                            <th>Trasa</th>
+                            <th>Pozycja</th>
+                            <th>Komunikat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTable">
+                        <!-- Messages will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="controls-section">
+                <h3>Wyślij komunikat ACARS</h3>
+                
+                <div class="quick-templates">
+                    <label>Szablony:</label><br>
+                    <button class="template-btn" data-template="position">Pozycja</button>
+                    <button class="template-btn" data-template="departure">Odlot</button>
+                    <button class="template-btn" data-template="arrival">Przylot</button>
+                    <button class="template-btn" data-template="fuel">Paliwo</button>
+                </div>
+
+                <form id="messageForm">
+                    <div class="form-group">
+                        <label for="aircraftId">Rejestracja samolotu:</label>
+                        <input type="text" id="aircraftId" placeholder="SP-LOT" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="flightNumber">Numer lotu:</label>
+                        <input type="text" id="flightNumber" placeholder="LO123" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="direction">Kierunek:</label>
+                        <select id="direction" required>
+                            <option value="OUT">Wychodzący (OUT)</option>
+                            <option value="IN">Przychodzący (IN)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="route">Trasa (opcjonalne):</label>
+                        <input type="text" id="route" placeholder="WAW-JFK">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="latitude">Szerokość geogr.:</label>
+                        <input type="number" id="latitude" step="0.000001" placeholder="52.165726">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="longitude">Długość geogr.:</label>
+                        <input type="number" id="longitude" step="0.000001" placeholder="20.967130">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="altitude">Wysokość (ft):</label>
+                        <input type="number" id="altitude" placeholder="35000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payload">Dane JSON:</label>
+                        <textarea id="payload" rows="6" placeholder='{"type": "position_report", "fuel_remaining": 12500}'></textarea>
+                    </div>
+                    
+                    <button type="submit">📡 Wyślij komunikat</button>
+                </form>
+                
+                <div id="sendStatus" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let accessToken = null;
+        let refreshToken = null;
+        
+        // DOM elements
+        const loginForm = document.getElementById('loginForm');
+        const acarsPanel = document.getElementById('acarsPanel');
+        const loginStatus = document.getElementById('loginStatus');
+        const messagesStatus = document.getElementById('messagesStatus');
+        const sendStatus = document.getElementById('sendStatus');
+        const messagesTable = document.getElementById('messagesTable');
+
+        // Templates
+        const templates = {
+            position: {
+                type: "position_report",
+                fuel_remaining: 12500,
+                speed: 480,
+                heading: 270
+            },
+            departure: {
+                type: "departure",
+                gate: "A12",
+                fuel_on_board: 18500,
+                passengers: 180
+            },
+            arrival: {
+                type: "arrival",
+                gate: "B7",
+                fuel_remaining: 4200,
+                flight_time: "02:15"
+            },
+            fuel: {
+                type: "fuel_report",
+                fuel_flow: 2400,
+                fuel_remaining: 8900,
+                endurance: "03:42"
+            }
+        };
+
+        // Login handling
+        document.querySelector('#loginForm form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                showStatus(loginStatus, 'Logowanie...', 'info');
+                
+                const response = await fetch('/api/token/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    accessToken = data.access;
+                    refreshToken = data.refresh;
+                    
+                    showStatus(loginStatus, 'Zalogowano pomyślnie!', 'success');
+                    setTimeout(() => {
+                        loginForm.style.display = 'none';
+                        acarsPanel.style.display = 'grid';
+                        loadMessages();
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    showStatus(loginStatus, 'Błąd logowania: ' + (error.detail || 'Nieprawidłowe dane'), 'error');
+                }
+            } catch (error) {
+                showStatus(loginStatus, 'Błąd połączenia: ' + error.message, 'error');
+            }
+        });
+
+        // Template buttons
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const template = templates[btn.dataset.template];
+                document.getElementById('payload').value = JSON.stringify(template, null, 2);
+            });
+        });
+
+        // Message form handling
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                showStatus(sendStatus, 'Wysyłanie...', 'info');
+                
+                const payload = JSON.parse(document.getElementById('payload').value || '{}');
+                
+                const messageData = {
+                    aircraft_id: document.getElementById('aircraftId').value,
+                    flight_number: document.getElementById('flightNumber').value,
+                    direction: document.getElementById('direction').value,
+                    route: document.getElementById('route').value,
+                    latitude: document.getElementById('latitude').value || null,
+                    longitude: document.getElementById('longitude').value || null,
+                    altitude: document.getElementById('altitude').value || null,
+                    payload: payload
+                };
+                
+                const response = await fetch('/acars/api/messages/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken
+                    },
+                    body: JSON.stringify(messageData)
+                });
+                
+                if (response.ok) {
+                    showStatus(sendStatus, 'Komunikat wysłany pomyślnie!', 'success');
+                    document.getElementById('messageForm').reset();
+                    loadMessages();
+                } else {
+                    const error = await response.json();
+                    showStatus(sendStatus, 'Błąd wysyłania: ' + JSON.stringify(error), 'error');
+                }
+            } catch (error) {
+                showStatus(sendStatus, 'Błąd: ' + error.message, 'error');
+            }
+        });
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', loadMessages);
+
+        // Load messages function
+        async function loadMessages() {
+            try {
+                showStatus(messagesStatus, 'Ładowanie komunikatów...', 'info');
+                
+                const response = await fetch('/acars/api/messages/', {
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayMessages(data.results || data);
+                    showStatus(messagesStatus, `Załadowano ${(data.results || data).length} komunikatów`, 'success');
+                } else {
+                    showStatus(messagesStatus, 'Błąd ładowania komunikatów', 'error');
+                }
+            } catch (error) {
+                showStatus(messagesStatus, 'Błąd połączenia: ' + error.message, 'error');
+            }
+        }
+
+        // Display messages in table
+        function displayMessages(messages) {
+            messagesTable.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const row = document.createElement('tr');
+                const timestamp = new Date(msg.timestamp).toLocaleString('pl-PL');
+                const direction = msg.direction === 'IN' ? 'direction-in' : 'direction-out';
+                const position = msg.latitude && msg.longitude ? 
+                    `${parseFloat(msg.latitude).toFixed(3)}, ${parseFloat(msg.longitude).toFixed(3)}` : '-';
+                
+                row.innerHTML = `
+                    <td>${timestamp}</td>
+                    <td><span class="${direction}">${msg.direction}</span></td>
+                    <td>${msg.flight_number || '-'}</td>
+                    <td>${msg.aircraft_id}</td>
+                    <td>${msg.route || '-'}</td>
+                    <td>${position}</td>
+                    <td>
+                        <div class="message-payload" onclick="togglePayload(this)">
+                            ${JSON.stringify(msg.payload).substring(0, 50)}...
+                        </div>
+                        <div class="message-details">${JSON.stringify(msg.payload, null, 2)}</div>
+                    </td>
+                `;
+                
+                messagesTable.appendChild(row);
+            });
+        }
+
+        // Toggle payload display
+        function togglePayload(element) {
+            const details = element.nextElementSibling;
+            details.style.display = details.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Show status messages
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (accessToken && acarsPanel.style.display !== 'none') {
+                loadMessages();
+            }
+        }, 30000);
+    </script>
+</body>
+</html> 
