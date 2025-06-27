@@ -24,10 +24,12 @@ def smartcars_webhook(request):
     Accepts POST requests from Smartcars ACARS system
     """
     if request.method == "GET":
+        # smartCARS 3 expects specific API format
         return JsonResponse({
-            "status": "ok",
-            "message": "ACARS endpoint active",
-            "version": "1.0"
+            "apiVersion": "1.0.0",
+            "handlerName": "Django ACARS",
+            "status": "active",
+            "response": "ok"
         })
     
     try:
@@ -65,21 +67,28 @@ def smartcars_webhook(request):
             payload=data  # Store all raw data
         )
         
+        # smartCARS 3 compatible response format
         return JsonResponse({
-            "status": "success",
-            "message": "ACARS message received",
-            "id": acars_message.id
+            "apiVersion": "1.0.0",
+            "status": "success", 
+            "response": "Message received successfully",
+            "data": {
+                "id": acars_message.id,
+                "timestamp": acars_message.timestamp.isoformat()
+            }
         })
         
     except json.JSONDecodeError:
         return JsonResponse({
-            "status": "error", 
-            "message": "Invalid JSON data"
+            "apiVersion": "1.0.0",
+            "status": "error",
+            "response": "Invalid JSON data"
         }, status=400)
     except Exception as e:
         return JsonResponse({
+            "apiVersion": "1.0.0", 
             "status": "error",
-            "message": str(e)
+            "response": str(e)
         }, status=500)
 
 class ACARSMessageViewSet(viewsets.ModelViewSet):
