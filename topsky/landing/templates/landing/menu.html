@@ -19,9 +19,23 @@
                 <a href="#stats" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Statistics</a>
                 <a href="#flights-map" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Live Map</a>
                 <a href="#team" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">Team</a>
-                <a href="#join" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-2 rounded-lg font-semibold transition-all transform hover:scale-105">
-                    Join Us
-                </a>
+                
+                                 {% if user.is_authenticated %}
+                     <span class="text-slate-300">Welcome, {{ user.first_name }}!</span>
+                     <a href="{% url 'accounts:dashboard' %}" class="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
+                         <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+                     </a>
+                     <a href="{% url 'accounts:logout' %}" class="text-red-400 hover:text-red-300 transition-colors font-medium">
+                         <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                     </a>
+                 {% else %}
+                     <a href="{% url 'accounts:login' %}" class="text-slate-300 hover:text-cyan-400 transition-colors font-medium">
+                         <i class="fas fa-sign-in-alt mr-1"></i>Login
+                     </a>
+                     <a href="{% url 'accounts:register' %}" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-2 rounded-lg font-semibold transition-all transform hover:scale-105">
+                         <i class="fas fa-user-plus mr-1"></i>Join Us
+                     </a>
+                 {% endif %}
             </div>
             
             <!-- Mobile Menu Button -->
@@ -37,7 +51,23 @@
                 <a href="#stats" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Statistics</a>
                 <a href="#flights-map" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Live Map</a>
                 <a href="#team" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">Team</a>
-                <a href="#join" class="block mx-3 my-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold text-center">Join Us</a>
+                
+                {% if user.is_authenticated %}
+                    <div class="px-3 py-2 text-slate-300">Welcome, {{ user.first_name }}!</div>
+                    <a href="{% url 'accounts:dashboard' %}" class="block px-3 py-2 text-cyan-400 hover:text-cyan-300 rounded-lg">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="block px-3 py-2 text-red-400 hover:text-red-300 rounded-lg">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="block px-3 py-2 text-slate-300 hover:text-cyan-400 rounded-lg">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="block mx-3 my-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold text-center">
+                        <i class="fas fa-user-plus mr-2"></i>Join Us
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>

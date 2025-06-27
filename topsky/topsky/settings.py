@@ -45,9 +45,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'tailwind',
     'theme',
     'landing',
+    'accounts',
 ]
 
 # Add browser reload in development
@@ -161,3 +163,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Tailwind CSS Configuration
 TAILWIND_APP_NAME = 'theme'
 NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
+
+# Email Configuration (Resend)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+RESEND_SMTP_PORT = 587
+RESEND_SMTP_USERNAME = 'resend'
+RESEND_SMTP_HOST = 'smtp.resend.com'
+EMAIL_USE_TLS = True
+
+# Auth Settings
+LOGIN_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Email settings for account verification  
+DEFAULT_FROM_EMAIL = 'noreply@topsky.app'
+EMAIL_HOST = RESEND_SMTP_HOST
+EMAIL_PORT = RESEND_SMTP_PORT
+EMAIL_HOST_USER = RESEND_SMTP_USERNAME
+EMAIL_HOST_PASSWORD = os.getenv('RESEND_API_KEY')
+EMAIL_USE_TLS = True
+
+# Site configuration for password reset emails
+SITE_ID = 1
