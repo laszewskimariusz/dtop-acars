@@ -186,3 +186,24 @@ EMAIL_USE_TLS = True
 
 # Site configuration for password reset emails
 SITE_ID = 1
+
+# CSRF and Security settings for production
+if not DEBUG:
+    # Production CSRF settings
+    CSRF_TRUSTED_ORIGINS = [
+        'https://topsky.app',
+        'https://www.topsky.app',
+    ]
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+else:
+    # Development CSRF settings
+    CSRF_TRUSTED_ORIGINS = [
+        'http://127.0.0.1:8000',
+        'http://localhost:8000',
+    ]
