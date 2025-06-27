@@ -24,6 +24,9 @@ urlpatterns = [
     path('auth/', include('accounts.urls')),
     
     # URL aliases for Django's password reset email templates (without namespace)
+    path('auth/password-reset/done/', 
+         auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'),
+         name='password_reset_done'),
     path('reset/<uidb64>/<token>/', 
          auth_views.PasswordResetConfirmView.as_view(template_name='accounts/password_reset_confirm.html'),
          name='password_reset_confirm'),
