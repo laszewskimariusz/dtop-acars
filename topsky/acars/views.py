@@ -24,13 +24,15 @@ def smartcars_webhook(request):
     Accepts POST requests from Smartcars ACARS system
     """
     if request.method == "GET":
-        # smartCARS 3 expects specific API format
+        # smartCARS 3 expects specific API format  
         return JsonResponse({
             "apiVersion": "1.0.0",
-            "handlerName": "Django ACARS Handler",
-            "handlerVersion": "1.0.0", 
-            "handlerAuthor": "Django ACARS System",
-            "handlerWebsite": "https://dtopsky.topsky.app",
+            "handler": {
+                "name": "Django ACARS Handler",
+                "version": "1.0.0",
+                "author": "Django ACARS System", 
+                "website": "https://dtopsky.topsky.app"
+            },
             "status": "success",
             "response": "Handler is active and ready",
             "data": {
