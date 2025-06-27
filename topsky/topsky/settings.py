@@ -193,11 +193,13 @@ if not DEBUG:
     CSRF_TRUSTED_ORIGINS = [
         'https://topsky.app',
         'https://www.topsky.app',
+        'https://dtopsky.topsky.app',
     ]
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
+    # Don't use SECURE_SSL_REDIRECT when behind proxy like Cloudflare
+    # SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
