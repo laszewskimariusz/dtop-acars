@@ -5,6 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy everything except .env file (handled by .dockerignore)
 COPY . .
 
 ENV DJANGO_SETTINGS_MODULE=topsky.settings
