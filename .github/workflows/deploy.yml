@@ -34,8 +34,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t harbor.zatto-lab.cloud/dtopsky/dtopsky:${{ env.TAG }} .
-          docker push harbor.zatto-lab.cloud/dtopsky/dtopsky:${{ env.TAG }}
+          docker build -t harbor.zatto-lab.cloud/dtopsky/d-topsky:${{ env.TAG }} .
+          docker push harbor.zatto-lab.cloud/dtopsky/d-topsky:${{ env.TAG }}
 
       - name: Checkout argo-manifest repo
         uses: actions/checkout@v4
