@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from .models import ACARSMessage
 from .serializers import ACARSMessageSerializer, ACARSMessageReadSerializer
@@ -111,6 +111,7 @@ def bulk_create_messages(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def smartcars_handler(request):
     """
     Główny endpoint smartCARS API - kompatybilność z smartCARS 3
@@ -150,6 +151,7 @@ def smartcars_handler(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def smartcars_login(request):
     """
     Legacy endpoint logowania dla kompatybilności z smartCARS
@@ -195,7 +197,7 @@ def smartcars_login(request):
 
 
 @api_view(['GET'])
-@permission_classes([])  # Wyłącz domyślne permission classes
+@permission_classes([AllowAny])
 def smartcars_user(request):
     """
     Legacy endpoint informacji o użytkowniku dla kompatybilności z smartCARS
@@ -243,22 +245,38 @@ def smartcars_user(request):
     })
 
 
-@api_view(['GET']) 
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def smartcars_basic_endpoint(request, endpoint_name):
     """
     Podstawowe endpointy (airports, aircraft, schedules) dla kompatybilności
     """
-    if not request.user.is_authenticated:
-        # Sprawdź api_key parameter
-        api_key = request.GET.get('api_key')
-        if api_key:
-            request.META['HTTP_AUTHORIZATION'] = f'Bearer {api_key}'
-        
-        if not request.user.is_authenticated:
+    from rest_framework_simplejwt.authentication import JWTAuthentication
+    
+    # Sprawdź JWT token w header lub api_key parameter
+    api_key = request.GET.get('api_key')
+    
+    if api_key and not request.META.get('HTTP_AUTHORIZATION'):
+        # Dodaj Bearer token do headerów jeśli podano api_key
+        request.META['HTTP_AUTHORIZATION'] = f'Bearer {api_key}'
+    
+    # Manualnie uwierzytelniaj używając JWT
+    jwt_auth = JWTAuthentication()
+    try:
+        user_auth = jwt_auth.authenticate(request)
+        if user_auth:
+            user, token = user_auth
+            request.user = user
+        else:
             return Response({
                 "status": "error",
                 "message": "Authentication required"
             }, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception:
+        return Response({
+            "status": "error",
+            "message": "Invalid token"
+        }, status=status.HTTP_401_UNAUTHORIZED)
     
     # Przykładowe dane - można rozszerzyć o prawdziwe dane z bazy
     if endpoint_name == "airports":
