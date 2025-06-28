@@ -1,5 +1,37 @@
 from django.db import models
 from django.contrib.auth.models import User
+import secrets
+
+
+class SmartcarsProfile(models.Model):
+    """
+    Profil SmartCARS dla użytkowników
+    Przechowuje osobny API key dla każdego użytkownika (niezależny od hasła Django)
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Użytkownik")
+    api_key = models.CharField(max_length=64, unique=True, verbose_name="API Key SmartCARS")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data utworzenia")
+    last_used = models.DateTimeField(null=True, blank=True, verbose_name="Ostatnie użycie")
+    is_active = models.BooleanField(default=True, verbose_name="Aktywny")
+    
+    class Meta:
+        verbose_name = "Profil SmartCARS"
+        verbose_name_plural = "Profile SmartCARS"
+    
+    def __str__(self):
+        return f"SmartCARS: {self.user.username} ({self.api_key[:8]}...)"
+    
+    def save(self, *args, **kwargs):
+        if not self.api_key:
+            # Generuj bezpieczny API key jeśli nie został podany
+            self.api_key = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        """Pobierz lub utwórz profil SmartCARS dla użytkownika"""
+        profile, created = cls.objects.get_or_create(user=user)
+        return profile
 
 
 class ACARSMessage(models.Model):

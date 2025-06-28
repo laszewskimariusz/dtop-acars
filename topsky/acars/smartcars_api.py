@@ -77,10 +77,11 @@ def login(request):
     if user and user.is_active:
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
         
         return Response({
             "pilot_id": user.id,
-            "session": str(refresh.access_token),  # Session token for API calls
+            "session": str(access_token),  # Session token for API calls
             "name": user.get_full_name() or user.username,
             "email": user.email,
             "country": "PL",  # Default country

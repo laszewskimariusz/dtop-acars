@@ -240,11 +240,16 @@ def smartcars_login(request):
                          safe_get_from_data('username') or 
                          safe_get_from_data('pilot_id') or
                          safe_get_from_data('user_id') or
+                         safe_get_from_data('user') or
+                         safe_get_from_data('login') or
                          basic_email),
                 "api_key": (safe_get_from_data('api_key') or 
                            safe_get_from_data('password') or
                            safe_get_from_data('key') or
                            safe_get_from_data('token') or
+                           safe_get_from_data('pass') or
+                           safe_get_from_data('pwd') or
+                           safe_get_from_data('secret') or
                            basic_api_key),
                 "basic_auth_found": bool(basic_email and basic_api_key),
                 "basic_email": basic_email,
@@ -292,12 +297,17 @@ def smartcars_login(request):
              safe_get_from_data('username') or 
              safe_get_from_data('pilot_id') or
              safe_get_from_data('user_id') or
+             safe_get_from_data('user') or        # Dodane dla smartCARS
+             safe_get_from_data('login') or       # Możliwy wariant
              basic_email)
     
     api_key = (safe_get_from_data('api_key') or 
                safe_get_from_data('password') or
                safe_get_from_data('key') or
                safe_get_from_data('token') or
+               safe_get_from_data('pass') or       # Dodane dla smartCARS
+               safe_get_from_data('pwd') or        # Możliwy wariant  
+               safe_get_from_data('secret') or     # Możliwy wariant
                basic_api_key)
     
     if not email or not api_key:
@@ -306,15 +316,29 @@ def smartcars_login(request):
             "message": "Email and API key required"
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Sprawdź uwierzytelnienie - najpierw spróbuj przez email
+    # Sprawdź uwierzytelnienie - wspieraj SmartCARS API keys
     user = None
     try:
+        # Najpierw znajdź użytkownika po email
         user = User.objects.get(email__iexact=email)
-        # Sprawdź czy api_key to hasło użytkownika (dla kompatybilności)
-        if not user.check_password(api_key):
-            user = None
+        
+        # Sprawdź czy istnieje osobny SmartCARS API key
+        try:
+            from .models import SmartcarsProfile
+            profile = SmartcarsProfile.objects.get(user=user, is_active=True)
+            if profile.api_key == api_key:
+                # Zalogowano przez SmartCARS API key - zaktualizuj last_used
+                from django.utils import timezone
+                profile.last_used = timezone.now()
+                profile.save(update_fields=['last_used'])
+            else:
+                user = None
+        except SmartcarsProfile.DoesNotExist:
+            # Fallback - sprawdź czy api_key to hasło użytkownika (dla kompatybilności)
+            if not user.check_password(api_key):
+                user = None
     except User.DoesNotExist:
-        # Fallback - spróbuj standardowego authenticate
+        # Fallback - spróbuj standardowego authenticate (username zamiast email)
         user = authenticate(username=email, password=api_key)
     
     if user and user.is_active:
