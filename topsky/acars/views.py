@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, parser_classes
+from rest_framework.parsers import FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
@@ -152,26 +153,38 @@ def smartcars_handler(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@parser_classes([FormParser, JSONParser])
 def smartcars_login(request):
     """
     Legacy endpoint logowania dla kompatybilności z smartCARS
-    Przekierowuje na nowy JWT system
+    Obsługuje email/api_key (smartCARS format) oraz username/password (fallback)
     """
     from rest_framework_simplejwt.tokens import RefreshToken
-    from django.contrib.auth import authenticate
+    from django.contrib.auth import authenticate, get_user_model
     
-    # Pobierz dane logowania
-    username = request.data.get('username')
-    password = request.data.get('password')
+    User = get_user_model()
     
-    if not username or not password:
+    # Pobierz dane logowania - smartCARS wysyła email/api_key
+    email = request.data.get('email') or request.data.get('username')
+    api_key = request.data.get('api_key') or request.data.get('password')
+    
+    if not email or not api_key:
         return Response({
             "status": "error",
-            "message": "Username and password required"
+            "message": "Email and API key required"
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Sprawdź uwierzytelnienie
-    user = authenticate(username=username, password=password)
+    # Sprawdź uwierzytelnienie - najpierw spróbuj przez email
+    user = None
+    try:
+        user = User.objects.get(email__iexact=email)
+        # Sprawdź czy api_key to hasło użytkownika (dla kompatybilności)
+        if not user.check_password(api_key):
+            user = None
+    except User.DoesNotExist:
+        # Fallback - spróbuj standardowego authenticate
+        user = authenticate(username=email, password=api_key)
+    
     if user and user.is_active:
         # Generuj tokeny JWT
         refresh = RefreshToken.for_user(user)

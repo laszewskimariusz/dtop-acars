@@ -1,107 +1,123 @@
 #!/usr/bin/env python3
 """
-Skrypt testowy do sprawdzenia logowania smartcars
+Test logowania smartCARS z email i api_key (hasłem)
 """
 
 import requests
 import json
-import sys
 
-def test_smartcars_login():
-    """Test logowania do smartcars API"""
+def test_smartcars_login_with_email():
+    """Test logowania smartCARS z email/password jako api_key"""
+    print("🧪 Testowanie logowania smartCARS z email/password...")
     
-    # URL endpointu
-    login_url = "http://localhost:8000/acars/login"
+    login_data = {
+        "email": "Zatto",  # email lub username
+        "api_key": "nowe_haslo123"  # hasło jako api_key
+    }
     
-    # Dane do logowania
-    credentials = {
+    url = "https://dtopsky.topsky.app/acars/api/login"
+    
+    try:
+        # Test JSON
+        response = requests.post(
+            url,
+            json=login_data,
+            headers={'Content-Type': 'application/json'},
+            timeout=10
+        )
+        print(f"✅ POST {url} (JSON) - Status: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                print(f"  ✅ Login successful!")
+                print(f"  Pilot ID: {data.get('data', {}).get('pilot_id')}")
+                api_key = data.get('data', {}).get('api_key', '')
+                print(f"  API Key: {api_key[:20]}...")
+                return api_key
+            else:
+                print(f"  ❌ Login failed: {data.get('message')}")
+                print(f"  Response: {response.text}")
+        else:
+            print(f"  ❌ HTTP Error: {response.text}")
+    except Exception as e:
+        print(f"❌ JSON test error: {e}")
+    
+    try:
+        # Test form-data
+        response = requests.post(
+            url,
+            data=login_data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            timeout=10
+        )
+        print(f"✅ POST {url} (form-data) - Status: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                print(f"  ✅ Login successful!")
+                print(f"  Pilot ID: {data.get('data', {}).get('pilot_id')}")
+                api_key = data.get('data', {}).get('api_key', '')
+                print(f"  API Key: {api_key[:20]}...")
+                return api_key
+            else:
+                print(f"  ❌ Login failed: {data.get('message')}")
+                print(f"  Response: {response.text}")
+        else:
+            print(f"  ❌ HTTP Error: {response.text}")
+    except Exception as e:
+        print(f"❌ Form-data test error: {e}")
+    
+    return None
+
+def test_legacy_username_password():
+    """Test fallback z username/password"""
+    print("\n🧪 Testowanie fallback username/password...")
+    
+    login_data = {
         "username": "Zatto",
         "password": "nowe_haslo123"
     }
     
-    print("🧪 Testowanie logowania smartcars...")
-    print(f"URL: {login_url}")
-    print(f"Credentials: {credentials}")
-    print("-" * 50)
+    url = "https://dtopsky.topsky.app/acars/api/login"
     
     try:
-        # Wysłanie żądania logowania
         response = requests.post(
-            login_url,
-            json=credentials,
+            url,
+            json=login_data,
             headers={'Content-Type': 'application/json'},
             timeout=10
         )
-        
-        print(f"Status Code: {response.status_code}")
-        print(f"Headers: {dict(response.headers)}")
-        
-        # Parsowanie odpowiedzi
-        if response.content:
-            try:
-                data = response.json()
-                print(f"Response JSON:")
-                print(json.dumps(data, indent=2, ensure_ascii=False))
-                
-                if data.get('success'):
-                    print("\n✅ SUKCES! Logowanie działa poprawnie")
-                    print(f"Token: {data.get('data', {}).get('token', 'BRAK')}")
-                else:
-                    print("\n❌ BŁĄD! Logowanie nie powiodło się")
-                    print(f"Komunikat: {data.get('message', 'Brak komunikatu')}")
-                    
-            except json.JSONDecodeError:
-                print(f"Raw Response: {response.text}")
+        print(f"✅ POST {url} (username/password) - Status: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                print(f"  ✅ Fallback login successful!")
+                api_key = data.get('data', {}).get('api_key', '')
+                print(f"  API Key: {api_key[:20]}...")
+                return api_key
+            else:
+                print(f"  ❌ Login failed: {data.get('message')}")
         else:
-            print("Pusta odpowiedź")
-            
-    except requests.exceptions.ConnectionError:
-        print("❌ BŁĄD! Nie można połączyć się z serwerem")
-        print("Upewnij się, że serwer Django działa na localhost:8000")
-        print("Uruchom: python manage.py runserver")
-        
+            print(f"  ❌ HTTP Error: {response.text}")
     except Exception as e:
-        print(f"❌ BŁĄD: {str(e)}")
-
-def test_user_info():
-    """Test endpointu informacji o użytkowniku"""
+        print(f"❌ Error: {e}")
     
-    # Najpierw pobierz token
-    login_url = "http://localhost:8000/acars/login"
-    credentials = {"username": "Zatto", "password": "nowe_haslo123"}
-    
-    try:
-        login_response = requests.post(login_url, json=credentials)
-        if login_response.status_code == 200:
-            login_data = login_response.json()
-            if login_data.get('success'):
-                token = login_data['data']['token']
-                
-                # Test endpointu user info
-                user_url = "http://localhost:8000/acars/user"
-                headers = {'Authorization': f'Bearer {token}'}
-                
-                print("\n🧪 Testowanie endpointu user info...")
-                print(f"URL: {user_url}")
-                print(f"Token: {token}")
-                
-                user_response = requests.get(user_url, headers=headers)
-                print(f"Status Code: {user_response.status_code}")
-                
-                if user_response.content:
-                    user_data = user_response.json()
-                    print("User Info Response:")
-                    print(json.dumps(user_data, indent=2, ensure_ascii=False))
-                    
-    except Exception as e:
-        print(f"❌ BŁĄD w user info: {str(e)}")
+    return None
 
 if __name__ == "__main__":
-    print("🚀 Smartcars API Test")
-    print("=" * 50)
+    print("🚀 Test logowania smartCARS")
+    print("=" * 60)
     
-    test_smartcars_login()
-    test_user_info()
+    # Test głównych formatów smartCARS
+    api_key = test_smartcars_login_with_email()
     
-    print("\n" + "=" * 50)
-    print("Test zakończony!") 
+    # Test fallback
+    if not api_key:
+        api_key = test_legacy_username_password()
+    
+    print("=" * 60)
+    if api_key:
+        print("✅ Logowanie powiodło się!")
+        print(f"🔑 API Key: {api_key}")
+    else:
+        print("❌ Logowanie nie powiodło się!") 
