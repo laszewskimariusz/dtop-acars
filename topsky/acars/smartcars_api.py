@@ -27,6 +27,7 @@ def handler(request):
     Format based on official phpVMS 7 module: github.com/invernyx/smartcars-3-phpvms7-api
     """
     return Response({
+        "apiVersion": "1.0.2",
         "handler": {
             "name": "smartCARS 3 Django Handler",
             "version": "1.0.2",
