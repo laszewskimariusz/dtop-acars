@@ -33,13 +33,13 @@ def test_smartcars_login():
     print("🧪 Testowanie logowania smartCARS API...")
     
     urls = [
-        "https://dtopsky.topsky.app/acars/api/login",
-        "https://dtopsky.topsky.app/acars/login"  # legacy
+        "https://dtopsky.topsky.app/acars/api/login/",  # Poprawny URL z trailing slash
+        "https://dtopsky.topsky.app/acars/login/"  # legacy
     ]
     
     credentials = {
-        "username": "Zatto",
-        "password": "nowe_haslo123"
+        "email": "laszewskimariusz@gmail.com",  # smartCARS format: email/api_key
+        "api_key": "nowe_haslo123"
     }
     
     for url in urls:

@@ -11,11 +11,11 @@ def test_smartcars_login_with_email():
     print("🧪 Testowanie logowania smartCARS z email/password...")
     
     login_data = {
-        "email": "Zatto",  # email lub username
+        "email": "laszewskimariusz@gmail.com",  # prawdziwy email użytkownika Zatto
         "api_key": "nowe_haslo123"  # hasło jako api_key
     }
     
-    url = "https://dtopsky.topsky.app/acars/api/login"
+    url = "https://dtopsky.topsky.app/acars/api/login/"
     
     try:
         # Test JSON
@@ -78,7 +78,7 @@ def test_legacy_username_password():
         "password": "nowe_haslo123"
     }
     
-    url = "https://dtopsky.topsky.app/acars/api/login"
+    url = "https://dtopsky.topsky.app/acars/api/login/"
     
     try:
         response = requests.post(

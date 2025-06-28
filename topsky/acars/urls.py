@@ -12,15 +12,21 @@ router.register(r'messages', ACARSMessageViewSet, basename='acarsmessage')
 app_name = 'acars'
 
 urlpatterns = [
-    # Główny endpoint smartCARS - tylko dokładnie /api/ (musi być PIERWSZY)
+    # Główny endpoint smartCARS - obsługa obu wariantów (z i bez trailing slash)
     re_path(r'^api/$', smartcars_handler, name='smartcars_handler'),
+    re_path(r'^api$', smartcars_handler, name='smartcars_handler_no_slash'),  # Bez slash dla smartCARS
     
     # Legacy endpoints dla kompatybilności z smartCARS (konkretne ścieżki)
     path('api/login/', smartcars_login, name='smartcars_login'),
+    path('api/login', smartcars_login, name='smartcars_login_no_slash'),  # Bez slash
     path('api/user/', smartcars_user, name='smartcars_user'),
+    path('api/user', smartcars_user, name='smartcars_user_no_slash'),  # Bez slash
     path('api/schedules/', smartcars_basic_endpoint, {'endpoint_name': 'schedules'}, name='smartcars_schedules'),
+    path('api/schedules', smartcars_basic_endpoint, {'endpoint_name': 'schedules'}, name='smartcars_schedules_no_slash'),
     path('api/aircraft/', smartcars_basic_endpoint, {'endpoint_name': 'aircraft'}, name='smartcars_aircraft'),
+    path('api/aircraft', smartcars_basic_endpoint, {'endpoint_name': 'aircraft'}, name='smartcars_aircraft_no_slash'),
     path('api/airports/', smartcars_basic_endpoint, {'endpoint_name': 'airports'}, name='smartcars_airports'),
+    path('api/airports', smartcars_basic_endpoint, {'endpoint_name': 'airports'}, name='smartcars_airports_no_slash'),
     
     # Dodatkowe endpointy
     path('api/ping/', ping, name='ping'),
