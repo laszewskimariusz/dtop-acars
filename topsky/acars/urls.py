@@ -23,8 +23,8 @@ urlpatterns = [
     path('api/smartcars/', smartcars_api.handler, name='smartcars3_handler'),
     path('api/smartcars', smartcars_api.handler, name='smartcars3_handler_no_slash'),
     
-    path('api/smartcars/login/', smartcars_api.login, name='smartcars3_login'),
-    path('api/smartcars/login', smartcars_api.login, name='smartcars3_login_no_slash'),
+    path('api/smartcars/login/', smartcars_api.acars_login, name='smartcars3_login'),
+    path('api/smartcars/login', smartcars_api.acars_login, name='smartcars3_login_no_slash'),
     
     path('api/smartcars/user/', smartcars_api.user, name='smartcars3_user'),
     path('api/smartcars/user', smartcars_api.user, name='smartcars3_user_no_slash'),

@@ -88,8 +88,15 @@ class ACARSMessage(models.Model):
         verbose_name="Kierunek wiadomości"
     )
     
+    # Dodatkowe pola dla smartCARS API
+    message_type = models.CharField(max_length=20, default='ACARS', verbose_name="Typ wiadomości")
+    departure_airport = models.CharField(max_length=4, blank=True, verbose_name="Lotnisko startu")
+    arrival_airport = models.CharField(max_length=4, blank=True, verbose_name="Lotnisko lądowania")
+    flight_time = models.CharField(max_length=10, blank=True, verbose_name="Czas lotu")
+    distance = models.CharField(max_length=10, blank=True, verbose_name="Dystans")
+    
     # Pełne dane JSON z urządzenia ACARS
-    payload = models.JSONField(verbose_name="Pełne dane JSON")
+    payload = models.JSONField(null=True, blank=True, verbose_name="Pełne dane JSON")
     
     class Meta:
         verbose_name = "Wiadomość ACARS"

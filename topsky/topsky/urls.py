@@ -22,10 +22,19 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from acars.smartcars_api import debug_login, acars_login
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('accounts.urls')),
+    
+    # Standard PHPvMS5 compatible endpoints for SmartCARS
+    path('api/acars-login/', acars_login, name='phpvms5_acars_login'),
+    path('api/acars-login', acars_login, name='phpvms5_acars_login_no_slash'),
+    
+    # Debug endpoint
+    path('api/debug-login/', debug_login, name='debug_acars_login'),
+    path('api/debug-login', debug_login, name='debug_acars_login_no_slash'), 
     
     # JWT Authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -38,11 +47,11 @@ urlpatterns = [
     # ACARS API (legacy)
     path('acars/', include('acars.urls')),
     
-    # Official smartCARS 3 API (compatible with TFDi Design smartCARS 3)
-    path('api/smartcars/', include('acars.smartcars_urls')),
+    # Official smartCARS 3 API (1:1 compatible with phpVMS)
+    path('api/smartcars/', include('acars.phpvms_urls')),
     
     # smartCARS 3 compatibility - handle URL without trailing slash
-    re_path(r'^api/smartcars$', include('acars.smartcars_urls')),
+    re_path(r'^api/smartcars$', include('acars.phpvms_urls')),
     
     # Topsky Plugin API - Custom smartCARS implementation
     path('api/topskyplugin/', include('acars.topsky_plugin_urls')),

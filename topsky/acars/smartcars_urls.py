@@ -16,8 +16,8 @@ urlpatterns = [
     re_path(r'^/$', smartcars_api.handler, name='handler_slash'),
     
     # Authentication endpoints
-    path('login', smartcars_api.login, name='login'),
-    path('login/', smartcars_api.login, name='login_slash'),
+    path('login', smartcars_api.acars_login, name='login'),
+    path('login/', smartcars_api.acars_login, name='login_slash'),
     
     # User info endpoint
     path('user', smartcars_api.user, name='user'),
