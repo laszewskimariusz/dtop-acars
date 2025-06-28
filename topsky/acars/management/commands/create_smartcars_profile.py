@@ -14,6 +14,11 @@ class Command(BaseCommand):
             help='Custom API key (if not provided, will be auto-generated)'
         )
         parser.add_argument(
+            '--acars-token',
+            type=str,
+            help='Custom ACARS token (if not provided, will be auto-generated)'
+        )
+        parser.add_argument(
             '--force',
             action='store_true',
             help='Overwrite existing profile if it exists',
@@ -45,6 +50,10 @@ class Command(BaseCommand):
                     profile.api_key = options['api_key']
                 else:
                     profile.api_key = ''  # Will be auto-generated on save
+                if options['acars_token']:
+                    profile.acars_token = options['acars_token']
+                else:
+                    profile.acars_token = ''  # Will be auto-generated on save
                 profile.save()
                 action = 'Updated'
         except SmartcarsProfile.DoesNotExist:
@@ -52,6 +61,8 @@ class Command(BaseCommand):
             profile_data = {'user': user}
             if options['api_key']:
                 profile_data['api_key'] = options['api_key']
+            if options['acars_token']:
+                profile_data['acars_token'] = options['acars_token']
             
             profile = SmartcarsProfile.objects.create(**profile_data)
             action = 'Created'
@@ -61,6 +72,7 @@ class Command(BaseCommand):
                 f'{action} SmartCARS profile for {user.email}\n'
                 f'Username: {user.username}\n'
                 f'API Key: {profile.api_key}\n'
+                f'ACARS Token: {profile.acars_token}\n'
                 f'Profile ID: {profile.id}\n'
                 f'Active: {profile.is_active}'
             )

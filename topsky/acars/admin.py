@@ -61,14 +61,31 @@ class ACARSMessageAdmin(admin.ModelAdmin):
 
 @admin.register(SmartcarsProfile)
 class SmartcarsProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'api_key_preview', 'is_active', 'created_at', 'last_used')
+    list_display = ('user', 'api_key_preview', 'acars_token_preview', 'is_active', 'created_at', 'last_used')
     list_filter = ('is_active', 'created_at', 'last_used')
-    search_fields = ('user__username', 'user__email', 'api_key')
+    search_fields = ('user__username', 'user__email', 'api_key', 'acars_token')
     readonly_fields = ('created_at', 'last_used')
+    fieldsets = (
+        ('Informacje podstawowe', {
+            'fields': ('user', 'is_active')
+        }),
+        ('Tokeny i klucze', {
+            'fields': ('api_key', 'acars_token'),
+            'description': 'API Key służy do logowania w SmartCARS. ACARS Token służy do komunikacji z systemem ACARS.'
+        }),
+        ('Metadane', {
+            'fields': ('created_at', 'last_used'),
+            'classes': ('collapse',)
+        })
+    )
     
     def api_key_preview(self, obj):
         return f"{obj.api_key[:8]}..." if obj.api_key else "N/A"
     api_key_preview.short_description = "API Key"
+    
+    def acars_token_preview(self, obj):
+        return f"{obj.acars_token[:12]}..." if obj.acars_token else "N/A"
+    acars_token_preview.short_description = "ACARS Token"
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)

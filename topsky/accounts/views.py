@@ -53,4 +53,15 @@ def login_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'accounts/dashboard.html', {'user': request.user}) 
+    # Spróbuj pobrać profil SmartCARS użytkownika
+    try:
+        from acars.models import SmartcarsProfile
+        smartcars_profile = SmartcarsProfile.objects.get(user=request.user, is_active=True)
+    except:
+        smartcars_profile = None
+    
+    context = {
+        'user': request.user,
+        'smartcars_profile': smartcars_profile
+    }
+    return render(request, 'accounts/dashboard.html', context) 

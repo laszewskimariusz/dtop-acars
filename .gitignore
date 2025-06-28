@@ -194,3 +194,5 @@ Thumbs.db
 *.temp
 
 topsky/__init__.py 
+topsky/acars/migrations/0003_add_acars_token.py
+topsky/acars/management/commands/create_smartcars_profile.py

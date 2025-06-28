@@ -120,6 +120,106 @@
             </div>
         </div>
 
+        <!-- SmartCARS/ACARS Integration Section -->
+        <div class="mb-12">
+            <div class="bg-slate-900/50 backdrop-blur-lg rounded-xl border border-slate-800 p-8 shadow-2xl">
+                <h2 class="text-2xl font-bold text-white mb-6">
+                    <i class="fas fa-satellite text-cyan-400 mr-3"></i>SmartCARS & ACARS Integration
+                </h2>
+                
+                {% if smartcars_profile %}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- SmartCARS API Key -->
+                        <div class="bg-slate-800/50 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-key text-green-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">SmartCARS API Key</h3>
+                                    <p class="text-slate-400 text-sm">For SmartCARS 3 Authentication</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-slate-400 text-sm mb-1">API Key:</label>
+                                    <div class="flex items-center bg-slate-700/50 rounded-lg p-3">
+                                        <code class="text-cyan-400 font-mono text-sm mr-2" id="api-key">{{ smartcars_profile.api_key }}</code>
+                                        <button onclick="copyToClipboard('api-key')" class="text-slate-400 hover:text-white transition-colors">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-slate-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Use this in SmartCARS 3 Script URL: <code class="text-cyan-400">https://dtopsky.topsky.app/acars/api</code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ACARS Token -->
+                        <div class="bg-slate-800/50 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-satellite-dish text-orange-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">ACARS Token</h3>
+                                    <p class="text-slate-400 text-sm">For ACARS Communication</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-slate-400 text-sm mb-1">ACARS Token:</label>
+                                    <div class="flex items-center bg-slate-700/50 rounded-lg p-3">
+                                        <code class="text-orange-400 font-mono text-sm mr-2" id="acars-token">{{ smartcars_profile.acars_token }}</code>
+                                        <button onclick="copyToClipboard('acars-token')" class="text-slate-400 hover:text-white transition-colors">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-slate-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Use this token for ACARS flight data transmission
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                        <div class="flex items-start">
+                            <div class="w-6 h-6 bg-cyan-500/20 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                <i class="fas fa-lightbulb text-cyan-400 text-xs"></i>
+                            </div>
+                            <div class="text-sm">
+                                <h4 class="text-cyan-400 font-medium mb-1">Setup Instructions:</h4>
+                                <ol class="text-slate-300 space-y-1 list-decimal list-inside">
+                                    <li>In SmartCARS 3, set Script URL to: <code class="text-cyan-400 bg-slate-800 px-1 py-0.5 rounded">https://dtopsky.topsky.app/acars/api</code></li>
+                                    <li>Use your email (<code class="text-cyan-400">{{ user.email }}</code>) as username</li>
+                                    <li>Use your API Key as password</li>
+                                    <li>Start flying and enjoy automated ACARS!</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">SmartCARS Profile Not Found</h3>
+                        <p class="text-slate-400 mb-6">You need a SmartCARS profile to use flight tracking features.</p>
+                        <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 max-w-md mx-auto">
+                            <p class="text-yellow-400 text-sm">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Contact an administrator to create your SmartCARS profile and receive your tokens.
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="bg-slate-900/50 backdrop-blur-lg rounded-xl border border-slate-800 p-8 shadow-2xl">
             <h2 class="text-2xl font-bold text-white mb-6">
@@ -159,4 +259,41 @@
         </div>
     </div>
 </div>
+
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success feedback
+        const button = element.nextElementSibling;
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+        
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        // Show success feedback
+        const button = element.nextElementSibling;
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+        
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    });
+}
+</script>
+
 {% endblock %} 

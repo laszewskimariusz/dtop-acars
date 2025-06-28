@@ -10,6 +10,8 @@ class SmartcarsProfile(models.Model):
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Użytkownik")
     api_key = models.CharField(max_length=64, unique=True, verbose_name="API Key SmartCARS")
+    acars_token = models.CharField(max_length=128, blank=True, verbose_name="Token ACARS", 
+                                  help_text="Dodatkowy token dla komunikacji ACARS")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data utworzenia")
     last_used = models.DateTimeField(null=True, blank=True, verbose_name="Ostatnie użycie")
     is_active = models.BooleanField(default=True, verbose_name="Aktywny")
@@ -25,6 +27,9 @@ class SmartcarsProfile(models.Model):
         if not self.api_key:
             # Generuj bezpieczny API key jeśli nie został podany
             self.api_key = secrets.token_urlsafe(32)
+        if not self.acars_token:
+            # Generuj bezpieczny ACARS token jeśli nie został podany
+            self.acars_token = secrets.token_urlsafe(48)
         super().save(*args, **kwargs)
     
     @classmethod

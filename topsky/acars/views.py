@@ -236,15 +236,18 @@ def smartcars_login(request):
     if request.GET.get('debug') == '1':
         try:
             extracted_fields = {
-                "email": (safe_get_from_data('email') or 
+                "email": (request.GET.get('username') or          # SmartCARS format - username w GET
+                         request.GET.get('email') or             # Alternatywny format w GET
+                         safe_get_from_data('email') or 
                          safe_get_from_data('username') or 
                          safe_get_from_data('pilot_id') or
                          safe_get_from_data('user_id') or
                          safe_get_from_data('user') or
                          safe_get_from_data('login') or
                          basic_email),
-                "api_key": (safe_get_from_data('api_key') or 
-                           safe_get_from_data('password') or
+                "api_key": (safe_get_from_data('password') or     # SmartCARS format - password w POST/body
+                           request.GET.get('password') or        # Fallback - password w GET
+                           safe_get_from_data('api_key') or 
                            safe_get_from_data('key') or
                            safe_get_from_data('token') or
                            safe_get_from_data('pass') or
@@ -292,22 +295,26 @@ def smartcars_login(request):
     
     User = get_user_model()
     
-    # Pobierz dane logowania - sprawdź wszystkie możliwe nazwy pól + Basic Auth
-    email = (safe_get_from_data('email') or 
+    # Pobierz dane logowania - sprawdź GET parametry (dla smartCARS) i wszystkie możliwe nazwy pól + Basic Auth
+    # SmartCARS wysyła username w GET i password w POST/body
+    email = (request.GET.get('username') or          # SmartCARS format - username w GET
+             request.GET.get('email') or             # Alternatywny format w GET
+             safe_get_from_data('email') or 
              safe_get_from_data('username') or 
              safe_get_from_data('pilot_id') or
              safe_get_from_data('user_id') or
-             safe_get_from_data('user') or        # Dodane dla smartCARS
-             safe_get_from_data('login') or       # Możliwy wariant
+             safe_get_from_data('user') or           # Dodane dla smartCARS
+             safe_get_from_data('login') or          # Możliwy wariant
              basic_email)
     
-    api_key = (safe_get_from_data('api_key') or 
-               safe_get_from_data('password') or
+    api_key = (safe_get_from_data('password') or     # SmartCARS format - password w POST/body
+               request.GET.get('password') or        # Fallback - password w GET
+               safe_get_from_data('api_key') or 
                safe_get_from_data('key') or
                safe_get_from_data('token') or
-               safe_get_from_data('pass') or       # Dodane dla smartCARS
-               safe_get_from_data('pwd') or        # Możliwy wariant  
-               safe_get_from_data('secret') or     # Możliwy wariant
+               safe_get_from_data('pass') or         # Dodane dla smartCARS
+               safe_get_from_data('pwd') or          # Możliwy wariant  
+               safe_get_from_data('secret') or       # Możliwy wariant
                basic_api_key)
     
     if not email or not api_key:
@@ -345,19 +352,41 @@ def smartcars_login(request):
         # Generuj tokeny JWT
         refresh = RefreshToken.for_user(user)
         
-        response_data = {
-            "status": "success",
-            "message": "Login successful",
-            "data": {
-                "pilot_id": user.id,
-                "api_key": str(refresh.access_token),  # JWT token jako API key
-                "refresh_token": str(refresh),
-                "user": {
-                    "name": user.get_full_name() or user.username,
-                    "email": user.email,
+        # Sprawdź czy to request ze SmartCARS - username w GET oznacza format SmartCARS
+        is_smartcars_request = (
+            'phpvms5/pilot/login' in request.path or 
+            request.GET.get('username') is not None
+        )
+        
+        if is_smartcars_request:
+            # SmartCARS format - płaski JSON z kluczem "session"
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            response_data = {
+                "pilotID": f"LO{user.id:04d}",
+                "session": str(refresh.access_token),
+                "expiry": int((timezone.now() + timedelta(days=7)).timestamp()),
+                "firstName": user.first_name or user.username,
+                "lastName": user.last_name or "",
+                "email": user.email
+            }
+        else:
+            # Standardowy format Django API
+            response_data = {
+                "status": "success",
+                "message": "Login successful",
+                "data": {
+                    "pilot_id": user.id,
+                    "api_key": str(refresh.access_token),  # JWT token jako API key
+                    "refresh_token": str(refresh),
+                    "user": {
+                        "name": user.get_full_name() or user.username,
+                        "email": user.email,
+                    }
                 }
             }
-        }
+        
         # Zapisz response do debugowania
         add_debug_request(request, response_data)
         return Response(response_data)
