@@ -18,9 +18,7 @@ urlpatterns = [
     re_path(r'^api/$', smartcars_handler, name='smartcars_handler'),
     re_path(r'^api$', smartcars_handler, name='smartcars_handler_no_slash'),  # Bez slash dla smartCARS
     
-    # SmartCARS compatible paths (phpvms5/pilot/login structure)
-    path('api/phpvms5/pilot/login/', smartcars_login, name='smartcars_login_phpvms5'),
-    path('api/phpvms5/pilot/login', smartcars_login, name='smartcars_login_phpvms5_no_slash'),
+
     
     # Legacy endpoints dla kompatybilności z smartCARS (konkretne ścieżki)
     path('api/login/', smartcars_login, name='smartcars_login'),

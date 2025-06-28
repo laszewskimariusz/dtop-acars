@@ -49,14 +49,21 @@ def handler(request):
 def login(request):
     """
     Official smartCARS 3 Login Endpoint
-    Supports email/api_key authentication (Discord/VATSIM SSO compatible)
+    Supports SmartCARS standard format: username in GET, password in POST
+    Also supports email/api_key authentication (Discord/VATSIM SSO compatible)
     Returns session token for subsequent API calls
     """
     User = get_user_model()
     
-    # Extract credentials - smartCARS 3 uses email/api_key format
-    email = request.data.get('email') or request.data.get('username')
-    api_key = request.data.get('api_key') or request.data.get('password')
+    # Extract credentials - SmartCARS standard: username in GET, password in POST
+    email = (request.GET.get('username') or          # SmartCARS standard format
+             request.GET.get('email') or             # Alternative GET format
+             request.data.get('email') or            # Legacy format
+             request.data.get('username'))           # Legacy format
+    
+    api_key = (request.data.get('password') or       # SmartCARS standard format
+               request.GET.get('password') or        # Fallback GET format  
+               request.data.get('api_key'))          # Legacy format
     
     if not email or not api_key:
         return Response({
