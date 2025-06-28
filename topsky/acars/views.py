@@ -198,256 +198,244 @@ def smartcars_handler(request):
 @permission_classes([AllowAny])
 @parser_classes([FormParser, JSONParser])
 def smartcars_login(request):
-    # Zapisz request do debugowania (zawsze)
-    add_debug_request(request)
     """
-    Legacy endpoint logowania dla kompatybilności z smartCARS
-    Obsługuje email/api_key (smartCARS format), username/password (fallback) oraz Basic Auth
+    SmartCARS 3 Compatible Login Endpoint
+    Fully compatible with TFDi Design SmartCARS 3 specification
+    
+    Expected format:
+    - Username in GET parameter: ?username=email@example.com
+    - Password in POST body: {"password": "password_or_api_key"}
+    
+    Response format (SmartCARS 3):
+    {
+        "pilotID": "LO0001",
+        "session": "jwt_token_here",
+        "expiry": 1234567890,
+        "firstName": "John",
+        "lastName": "Doe", 
+        "email": "email@example.com"
+    }
     """
     from rest_framework_simplejwt.tokens import RefreshToken
     from django.contrib.auth import authenticate, get_user_model
+    from django.utils import timezone
+    from datetime import timedelta
     import logging
     import base64
     
-    # Bezpieczne wyciąganie danych z request
+    # Always log request for debugging
+    add_debug_request(request)
+    
+    logger = logging.getLogger(__name__)
+    User = get_user_model()
+    
+    # Helper function to safely extract data
     def safe_get_from_data(key):
         try:
             if hasattr(request.data, 'get'):
                 return request.data.get(key)
-            elif hasattr(request.data, '__getitem__'):
-                return request.data.get(key, None) if hasattr(request.data, 'get') else None
+            elif isinstance(request.data, dict):
+                return request.data.get(key)
         except:
-            return None
+            pass
         return None
     
-    # Sprawdź Basic Authentication
-    basic_email = None
-    basic_api_key = None
-    auth_header = request.headers.get('Authorization', '')
-    if auth_header.startswith('Basic '):
-        try:
-            creds = base64.b64decode(auth_header.split(' ')[1]).decode('utf-8')
-            if ':' in creds:
-                basic_email, basic_api_key = creds.split(':', 1)
-        except Exception:
-            pass
+    # Extract credentials - SmartCARS 3 standard format
+    # Username MUST be in GET parameter, password MUST be in POST body
+    username = request.GET.get('username')  # SmartCARS 3 standard
+    password = safe_get_from_data('password')  # SmartCARS 3 standard
     
-    # DEBUG: Zwróć informacje o żądaniu jeśli parametr debug=1
+    # Fallback: try other common field names
+    if not username:
+        username = (request.GET.get('email') or 
+                   safe_get_from_data('email') or 
+                   safe_get_from_data('username'))
+    
+    if not password:
+        password = (safe_get_from_data('api_key') or
+                   safe_get_from_data('key') or
+                   request.GET.get('password'))  # Fallback
+    
+    # Check Basic Authentication as fallback
+    if not username or not password:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Basic '):
+            try:
+                creds = base64.b64decode(auth_header.split(' ')[1]).decode('utf-8')
+                if ':' in creds:
+                    username, password = creds.split(':', 1)
+            except Exception:
+                pass
+    
+    # DEBUG mode - return detailed request information
     if request.GET.get('debug') == '1':
-        try:
-            extracted_fields = {
-                "email": (request.GET.get('username') or          # SmartCARS format - username w GET
-                         request.GET.get('email') or             # Alternatywny format w GET
-                         safe_get_from_data('email') or 
-                         safe_get_from_data('username') or 
-                         safe_get_from_data('pilot_id') or
-                         safe_get_from_data('user_id') or
-                         safe_get_from_data('user') or
-                         safe_get_from_data('login') or
-                         basic_email),
-                "api_key": (safe_get_from_data('password') or     # SmartCARS format - password w POST/body
-                           request.GET.get('password') or        # Fallback - password w GET
-                           safe_get_from_data('api_key') or 
-                           safe_get_from_data('key') or
-                           safe_get_from_data('token') or
-                           safe_get_from_data('pass') or
-                           safe_get_from_data('pwd') or
-                           safe_get_from_data('secret') or
-                           basic_api_key),
-                "basic_auth_found": bool(basic_email and basic_api_key),
-                "basic_email": basic_email,
-                "basic_api_key": basic_api_key[:5] + "..." if basic_api_key else None
-            }
-            
-            # Bezpieczne czytanie body
-            safe_body = None
-            try:
-                safe_body = request.body.decode('utf-8', errors='ignore') if request.body else None
-            except Exception:
-                safe_body = "Unable to read body (already parsed by DRF)"
-            
-            return Response({
-                "debug_info": {
-                    "content_type": getattr(request, 'content_type', 'unknown'),
-                    "method": request.method,
-                    "POST_data": dict(request.POST),
-                    "JSON_data": dict(request.data) if hasattr(request.data, 'items') else str(request.data),
-                    "query_params": dict(request.GET),
-                    "headers": {k: v for k, v in request.headers.items()},
-                    "body": safe_body,
-                    "extracted_fields": extracted_fields
-                }
-            })
-        except Exception as e:
-            # Bezpieczne czytanie body w exception handler
-            safe_body = None
-            try:
-                safe_body = request.body.decode('utf-8', errors='ignore') if request.body else None
-            except Exception:
-                safe_body = "Unable to read body (already parsed by DRF)"
-            
-            return Response({
-                "debug_error": str(e),
-                "raw_body": safe_body,
-                "auth_header": auth_header,
-                "basic_auth_parsed": {"email": basic_email, "api_key": basic_api_key[:5] + "..." if basic_api_key else None}
-            })
-    
-    User = get_user_model()
-    
-    # Pobierz dane logowania - sprawdź GET parametry (dla smartCARS) i wszystkie możliwe nazwy pól + Basic Auth
-    # SmartCARS wysyła username w GET i password w POST/body
-    email = (request.GET.get('username') or          # SmartCARS format - username w GET
-             request.GET.get('email') or             # Alternatywny format w GET
-             safe_get_from_data('email') or 
-             safe_get_from_data('username') or 
-             safe_get_from_data('pilot_id') or
-             safe_get_from_data('user_id') or
-             safe_get_from_data('user') or           # Dodane dla smartCARS
-             safe_get_from_data('login') or          # Możliwy wariant
-             basic_email)
-    
-    api_key = (safe_get_from_data('password') or     # SmartCARS format - password w POST/body
-               request.GET.get('password') or        # Fallback - password w GET
-               safe_get_from_data('api_key') or 
-               safe_get_from_data('key') or
-               safe_get_from_data('token') or
-               safe_get_from_data('pass') or         # Dodane dla smartCARS
-               safe_get_from_data('pwd') or          # Możliwy wariant  
-               safe_get_from_data('secret') or       # Możliwy wariant
-               basic_api_key)
-    
-    if not email or not api_key:
         return Response({
-            "status": "error",
-            "message": "Email and API key required"
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Sprawdź uwierzytelnienie - wspieraj SmartCARS API keys
-    user = None
-    try:
-        # Najpierw znajdź użytkownika po email
-        user = User.objects.get(email__iexact=email)
-        
-        # Sprawdź czy istnieje osobny SmartCARS API key
-        try:
-            from .models import SmartcarsProfile
-            profile = SmartcarsProfile.objects.get(user=user, is_active=True)
-            if profile.api_key == api_key:
-                # Zalogowano przez SmartCARS API key - zaktualizuj last_used
-                from django.utils import timezone
-                profile.last_used = timezone.now()
-                profile.save(update_fields=['last_used'])
-            else:
-                user = None
-        except SmartcarsProfile.DoesNotExist:
-            # Fallback - sprawdź czy api_key to hasło użytkownika (dla kompatybilności)
-            if not user.check_password(api_key):
-                user = None
-    except User.DoesNotExist:
-        # Fallback - spróbuj standardowego authenticate (username zamiast email)
-        user = authenticate(username=email, password=api_key)
-    
-    if user and user.is_active:
-        # Generuj tokeny JWT z kompatybilnością SmartCARS (sub claim)
-        from .tokens import SmartCARSRefreshToken
-        refresh = SmartCARSRefreshToken.for_user(user)
-        
-        # Sprawdź czy to request ze SmartCARS - username w GET oznacza format SmartCARS
-        is_smartcars_request = (
-            'phpvms5/pilot/login' in request.path or 
-            request.GET.get('username') is not None
-        )
-        
-        if is_smartcars_request:
-            # SmartCARS format - płaski JSON z kluczem "session"
-            from django.utils import timezone
-            from datetime import timedelta
-            
-            response_data = {
-                "pilotID": f"LO{user.id:04d}",
-                "session": str(refresh.access_token),
-                "expiry": int((timezone.now() + timedelta(days=7)).timestamp()),
-                "firstName": user.first_name or user.username,
-                "lastName": user.last_name or "",
-                "email": user.email
+            "debug_mode": True,
+            "extracted_credentials": {
+                "username": username,
+                "password": password[:5] + "..." if password else None,
+                "username_source": "GET parameter" if request.GET.get('username') else "fallback",
+                "password_source": "POST body" if safe_get_from_data('password') else "fallback"
+            },
+            "request_info": {
+                "method": request.method,
+                "content_type": getattr(request, 'content_type', 'unknown'),
+                "GET_params": dict(request.GET),
+                "POST_data": dict(request.data) if hasattr(request.data, 'items') else str(request.data),
+                "headers": dict(request.headers)
             }
-        else:
-            # Standardowy format Django API
-            response_data = {
-                "status": "success",
-                "message": "Login successful",
-                "data": {
-                    "pilot_id": user.id,
-                    "api_key": str(refresh.access_token),  # JWT token jako API key
-                    "refresh_token": str(refresh),
-                    "user": {
-                        "name": user.get_full_name() or user.username,
-                        "email": user.email,
-                    }
-                }
-            }
-        
-        # Zapisz response do debugowania
-        add_debug_request(request, response_data)
-        return Response(response_data)
-    else:
-        error_response = {
-            "status": "error", 
+        })
+    
+    # Validate required credentials
+    if not username or not password:
+        logger.warning(f"SmartCARS login failed - missing credentials. Username: {bool(username)}, Password: {bool(password)}")
+        return Response({
             "message": "Invalid credentials"
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Authenticate user
+    user = None
+    auth_method = None
+    
+    try:
+        # Method 1: Find user by email and check SmartCARS API key
+        try:
+            user = User.objects.get(email__iexact=username, is_active=True)
+            
+            # Check SmartCARS API key first
+            try:
+                from .models import SmartcarsProfile
+                profile = SmartcarsProfile.objects.get(user=user, is_active=True)
+                if profile.api_key == password:
+                    # Update last used timestamp
+                    profile.last_used = timezone.now()
+                    profile.save(update_fields=['last_used'])
+                    auth_method = "smartcars_api_key"
+                else:
+                    user = None
+            except SmartcarsProfile.DoesNotExist:
+                # Fallback: check Django password
+                if user.check_password(password):
+                    auth_method = "django_password"
+                else:
+                    user = None
+                    
+        except User.DoesNotExist:
+            # Method 2: Try Django authenticate with username
+            user = authenticate(username=username, password=password)
+            if user:
+                auth_method = "django_auth"
+    
+    except Exception as e:
+        logger.error(f"SmartCARS login error: {e}")
+        user = None
+    
+    # Check if authentication was successful
+    if not user or not user.is_active:
+        logger.warning(f"SmartCARS login failed for username: {username}")
+        return Response({
+            "message": "Invalid credentials"
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        # Generate standard JWT token (works reliably)
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+        
+        # Calculate expiry (7 days from now - SmartCARS 3 standard)
+        expiry_time = timezone.now() + timedelta(days=7)
+        expiry_timestamp = int(expiry_time.timestamp())
+        
+        # Generate pilot ID in SmartCARS format (e.g., LO0001)
+        pilot_id = f"LO{user.id:04d}"
+        
+        # SmartCARS 3 compatible response format
+        response_data = {
+            "pilotID": pilot_id,
+            "session": str(access_token),
+            "expiry": expiry_timestamp,
+            "firstName": user.first_name or user.username.split('@')[0],
+            "lastName": user.last_name or "",
+            "email": user.email
         }
-        # Zapisz error response do debugowania
-        add_debug_request(request, error_response)
-        return Response(error_response, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Log successful authentication
+        logger.info(f"SmartCARS login successful: {username} (method: {auth_method})")
+        add_debug_request(request, response_data)
+        
+        return Response(response_data)
+        
+    except Exception as e:
+        logger.error(f"SmartCARS token generation error: {e}")
+        return Response({
+            "message": "Authentication failed"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def smartcars_user_v3(request):
+def smartcars_user(request):
     """
-    Legacy endpoint informacji o użytkowniku dla kompatybilności z smartCARS
-    Wymaga Bearer token w headerze Authorization lub api_key w parametrach
+    SmartCARS 3 User Info Endpoint
+    Returns user information for authenticated session
+    Compatible with SmartCARS 3 session tokens
     """
     from rest_framework_simplejwt.authentication import JWTAuthentication
+    from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
     
-    # Sprawdź JWT token w header lub api_key parameter
-    api_key = request.GET.get('api_key')
+    # Extract session token from Authorization header or session parameter
+    session_token = request.GET.get('session') or request.GET.get('api_key')
     
-    if api_key and not request.META.get('HTTP_AUTHORIZATION'):
-        # Dodaj Bearer token do headerów jeśli podano api_key
-        request.META['HTTP_AUTHORIZATION'] = f'Bearer {api_key}'
+    # If no session in GET params, check Authorization header
+    if not session_token:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            session_token = auth_header.split(' ')[1]
     
-    # Manualnie uwierzytelniaj używając JWT
+    # If still no token, return error
+    if not session_token:
+        return Response({
+            "message": "Authentication required"
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Manually set Authorization header for JWT authentication
+    if not request.META.get('HTTP_AUTHORIZATION'):
+        request.META['HTTP_AUTHORIZATION'] = f'Bearer {session_token}'
+    
+    # Authenticate using JWT
     jwt_auth = JWTAuthentication()
     try:
         user_auth = jwt_auth.authenticate(request)
         if user_auth:
             user, token = user_auth
-            request.user = user
+            
+            # SmartCARS 3 compatible user response
+            return Response({
+                "pilotID": f"LO{user.id:04d}",
+                "name": user.get_full_name() or user.username,
+                "email": user.email,
+                "firstName": user.first_name or user.username.split('@')[0],
+                "lastName": user.last_name or "",
+                "country": "PL",
+                "timezone": "Europe/Warsaw",
+                "opt_in": True,
+                "status": 1,
+                "total_flights": ACARSMessage.objects.filter(user=user).count(),
+                "total_hours": 0,  # Can be calculated from flight data
+                "curr_airport_id": "EPWA"  # Default current airport
+            })
         else:
             return Response({
-                "status": "error",
                 "message": "Authentication required"
             }, status=status.HTTP_401_UNAUTHORIZED)
-    except Exception:
+    except (InvalidToken, TokenError) as e:
         return Response({
-            "status": "error",
-            "message": "Invalid token"
+            "message": "Invalid session token"
         }, status=status.HTTP_401_UNAUTHORIZED)
-    
-    return Response({
-        "status": "success",
-        "data": {
-            "id": request.user.id,
-            "name": request.user.get_full_name() or request.user.username,
-            "email": request.user.email,
-            "username": request.user.username,
-            "country": "PL",  # Domyślnie Polska
-            "curr_airport_id": "EPWA",  # Domyślnie Warszawa
-            "total_flights": ACARSMessage.objects.filter(user=request.user).count(),
-            "total_hours": 0,  # Można dodać kalkulację z czasu lotów
-        }
-    })
+    except Exception as e:
+        return Response({
+            "message": "Authentication failed"
+        }, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['GET'])
@@ -591,49 +579,6 @@ def smartcars_login_v3(request):
     else:
         return Response({
             "message": "Invalid credentials"
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def smartcars_user(request):
-    """
-    Official smartCARS 3 User Info Endpoint
-    Returns user information for authenticated session
-    """
-    from rest_framework_simplejwt.authentication import JWTAuthentication
-    
-    # Extract session token from Authorization header or session parameter
-    session_token = request.GET.get('session')
-    if session_token and not request.META.get('HTTP_AUTHORIZATION'):
-        request.META['HTTP_AUTHORIZATION'] = f'Bearer {session_token}'
-    
-    # Authenticate using JWT
-    jwt_auth = JWTAuthentication()
-    try:
-        user_auth = jwt_auth.authenticate(request)
-        if user_auth:
-            user, token = user_auth
-            
-            return Response({
-                "pilot_id": user.id,
-                "name": user.get_full_name() or user.username,
-                "email": user.email,
-                "country": "PL",
-                "timezone": "Europe/Warsaw",
-                "opt_in": True,
-                "status": 1,
-                "total_flights": ACARSMessage.objects.filter(user=user).count(),
-                "total_hours": 0,  # Can be calculated from flight data
-                "curr_airport_id": "EPWA"  # Default current airport
-            })
-        else:
-            return Response({
-                "message": "Authentication required"
-            }, status=status.HTTP_401_UNAUTHORIZED)
-    except Exception as e:
-        return Response({
-            "message": "Invalid session token"
         }, status=status.HTTP_401_UNAUTHORIZED)
 
 

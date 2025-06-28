@@ -201,3 +201,7 @@ ACARS_BRIDGE_API.md
 commit_message.txt
 topsky/topsky/__pycache__/settings.cpython-313.pyc
 topsky/topsky/__pycache__/settings.cpython-313.pyc
+test_localhost_smartcars.py
+test_final_smartcars.py
+test_jwt_simple.py
+test_smartcars_connection.py
