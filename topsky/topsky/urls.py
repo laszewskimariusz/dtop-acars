@@ -25,6 +25,11 @@ from rest_framework_simplejwt.views import (
 from acars.smartcars_api import debug_login, acars_login
 
 urlpatterns = [
+    # SmartCARS 3 Official API endpoint - CRITICAL for ACARS login - FIRST in URL list
+    path('pilot/login', acars_login, name='smartcars3_pilot_login'),
+    path('pilot/login/', acars_login, name='smartcars3_pilot_login_slash'),
+    path('pilot-test/', acars_login, name='pilot_test'),  # Test endpoint
+    
     path('admin/', admin.site.urls),
     path('auth/', include('accounts.urls')),
     
