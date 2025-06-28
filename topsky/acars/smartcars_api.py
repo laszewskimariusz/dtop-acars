@@ -82,8 +82,9 @@ def login(request):
         user = authenticate(username=email, password=api_key)
     
     if user and user.is_active:
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
+        # Generate JWT tokens with SmartCARS compatibility (sub claim)
+        from .tokens import SmartCARSRefreshToken
+        refresh = SmartCARSRefreshToken.for_user(user)
         access_token = refresh.access_token
         
         return Response({

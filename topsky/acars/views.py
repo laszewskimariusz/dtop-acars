@@ -349,8 +349,9 @@ def smartcars_login(request):
         user = authenticate(username=email, password=api_key)
     
     if user and user.is_active:
-        # Generuj tokeny JWT
-        refresh = RefreshToken.for_user(user)
+        # Generuj tokeny JWT z kompatybilnością SmartCARS (sub claim)
+        from .tokens import SmartCARSRefreshToken
+        refresh = SmartCARSRefreshToken.for_user(user)
         
         # Sprawdź czy to request ze SmartCARS - username w GET oznacza format SmartCARS
         is_smartcars_request = (

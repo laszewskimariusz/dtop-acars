@@ -238,6 +238,9 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'BLACKLIST_AFTER_ROTATION': True,
+    # SmartCARS compatibility: dodaj 'sub' claim do JWT payload
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',  # Zachowaj również user_id dla kompatybilności Django
 }
 
 # CORS Configuration for smartCARS compatibility
