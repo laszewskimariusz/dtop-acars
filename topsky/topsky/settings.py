@@ -244,19 +244,26 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# CORS Configuration for smartCARS compatibility
-CORS_ALLOW_ALL_ORIGINS = True  # Tylko dla rozwoju - w produkcji ustaw konkretne domeny
+# CORS Configuration for smartCARS 3 compatibility
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for SmartCARS client compatibility
+
+# Additional specific origins for smartCARS
 CORS_ALLOWED_ORIGINS = [
-    "https://smartcars.aero",  # Główna domena smartCARS
-    "https://app.smartcars.aero",  # Aplikacja smartCARS
-    "http://localhost:3000",  # Rozwój lokalny
+    "https://smartcars.aero",
+    "https://app.smartcars.aero", 
+    "https://central.smartcars.aero",
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:7172",  # SmartCARS local client
+    "http://127.0.0.1:7172",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# SmartCARS 3 required headers
 CORS_ALLOW_HEADERS = [
     'accept',
-    'accept-encoding',
+    'accept-encoding', 
     'authorization',
     'content-type',
     'dnt',
@@ -264,5 +271,31 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'x-api-key',  # Dla smartCARS API
+    'x-api-key',
+    'x-api-version',
+    'x-smartcars-version',
+    'cache-control',
+    'pragma',
 ]
+
+# Explicitly allow methods SmartCARS uses
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET', 
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Expose headers that SmartCARS might need
+CORS_EXPOSE_HEADERS = [
+    'content-length',
+    'content-type',
+    'date',
+    'server',
+    'x-api-version',
+]
+
+# Handle preflight requests properly
+CORS_PREFLIGHT_MAX_AGE = 86400

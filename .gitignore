@@ -205,3 +205,14 @@ test_localhost_smartcars.py
 test_final_smartcars.py
 test_jwt_simple.py
 test_smartcars_connection.py
+
+# All test files for SmartCARS debugging
+test_*.py
+test_exact_url.py
+test_debug_info.py
+test_production_*.py
+test_community_*.py
+test_smartcars_*.py
+test_jwt_*.py
+check_*.py
+acars_client_example.py
