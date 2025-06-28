@@ -161,12 +161,44 @@ def smartcars_login(request):
     """
     from rest_framework_simplejwt.tokens import RefreshToken
     from django.contrib.auth import authenticate, get_user_model
+    import logging
+    
+    # DEBUG: Zwróć informacje o żądaniu jeśli parametr debug=1
+    if request.GET.get('debug') == '1':
+        try:
+            return Response({
+                "debug_info": {
+                    "content_type": getattr(request, 'content_type', 'unknown'),
+                    "method": request.method,
+                    "POST_data": dict(request.POST),
+                    "JSON_data": dict(request.data) if hasattr(request.data, 'items') else request.data,
+                    "query_params": dict(request.GET),
+                    "headers": {k: v for k, v in request.headers.items()},
+                    "body": request.body.decode('utf-8', errors='ignore') if request.body else None,
+                    "extracted_fields": {
+                        "email": request.data.get('email') or request.data.get('username'),
+                        "api_key": request.data.get('api_key') or request.data.get('password'),
+                    }
+                }
+            })
+        except Exception as e:
+            return Response({
+                "debug_error": str(e),
+                "raw_body": request.body.decode('utf-8', errors='ignore') if request.body else None
+            })
     
     User = get_user_model()
     
-    # Pobierz dane logowania - smartCARS wysyła email/api_key
-    email = request.data.get('email') or request.data.get('username')
-    api_key = request.data.get('api_key') or request.data.get('password')
+    # Pobierz dane logowania - sprawdź wszystkie możliwe nazwy pól
+    email = (request.data.get('email') or 
+             request.data.get('username') or 
+             request.data.get('pilot_id') or
+             request.data.get('user_id'))
+    
+    api_key = (request.data.get('api_key') or 
+               request.data.get('password') or
+               request.data.get('key') or
+               request.data.get('token'))
     
     if not email or not api_key:
         return Response({
