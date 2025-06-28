@@ -1086,7 +1086,7 @@ def topsky_smartcars_login(request):
     })
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 @parser_classes([JSONParser])
 def acars_bridge_login(request):
@@ -1107,6 +1107,19 @@ def acars_bridge_login(request):
     
     logger = logging.getLogger(__name__)
     client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+    
+    # Handle GET request - endpoint info
+    if request.method == 'GET':
+        return Response({
+            'success': True,
+            'message': 'ACARS Bridge Plugin Login Endpoint',
+            'data': {
+                'endpoint': '/api/acars-login/',
+                'method': 'POST',
+                'required_fields': ['pilot_id', 'callsign', 'name', 'email'],
+                'version': '1.0'
+            }
+        })
     
     try:
         # Parse request data
