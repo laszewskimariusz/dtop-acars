@@ -16,6 +16,13 @@ def add_debug_request(request, response_data=None):
     """Dodaj request do listy debugowej"""
     import datetime
     
+    # Bezpieczne czytanie body (unikaj RawPostDataException)
+    safe_body = None
+    try:
+        safe_body = request.body.decode('utf-8', errors='ignore')[:500] if request.body else None
+    except Exception:
+        safe_body = "Unable to read body (already parsed by DRF)"
+    
     debug_info = {
         'timestamp': datetime.datetime.now().isoformat(),
         'method': request.method,
@@ -25,7 +32,7 @@ def add_debug_request(request, response_data=None):
         'GET_params': dict(request.GET),
         'POST_data': dict(request.POST),
         'JSON_data': dict(request.data) if hasattr(request.data, 'items') else str(request.data),
-        'body': request.body.decode('utf-8', errors='ignore')[:500] if request.body else None,
+        'body': safe_body,
         'response': response_data
     }
     
@@ -195,48 +202,103 @@ def smartcars_login(request):
     add_debug_request(request)
     """
     Legacy endpoint logowania dla kompatybilności z smartCARS
-    Obsługuje email/api_key (smartCARS format) oraz username/password (fallback)
+    Obsługuje email/api_key (smartCARS format), username/password (fallback) oraz Basic Auth
     """
     from rest_framework_simplejwt.tokens import RefreshToken
     from django.contrib.auth import authenticate, get_user_model
     import logging
+    import base64
+    
+    # Bezpieczne wyciąganie danych z request
+    def safe_get_from_data(key):
+        try:
+            if hasattr(request.data, 'get'):
+                return request.data.get(key)
+            elif hasattr(request.data, '__getitem__'):
+                return request.data.get(key, None) if hasattr(request.data, 'get') else None
+        except:
+            return None
+        return None
+    
+    # Sprawdź Basic Authentication
+    basic_email = None
+    basic_api_key = None
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Basic '):
+        try:
+            creds = base64.b64decode(auth_header.split(' ')[1]).decode('utf-8')
+            if ':' in creds:
+                basic_email, basic_api_key = creds.split(':', 1)
+        except Exception:
+            pass
     
     # DEBUG: Zwróć informacje o żądaniu jeśli parametr debug=1
     if request.GET.get('debug') == '1':
         try:
+            extracted_fields = {
+                "email": (safe_get_from_data('email') or 
+                         safe_get_from_data('username') or 
+                         safe_get_from_data('pilot_id') or
+                         safe_get_from_data('user_id') or
+                         basic_email),
+                "api_key": (safe_get_from_data('api_key') or 
+                           safe_get_from_data('password') or
+                           safe_get_from_data('key') or
+                           safe_get_from_data('token') or
+                           basic_api_key),
+                "basic_auth_found": bool(basic_email and basic_api_key),
+                "basic_email": basic_email,
+                "basic_api_key": basic_api_key[:5] + "..." if basic_api_key else None
+            }
+            
+            # Bezpieczne czytanie body
+            safe_body = None
+            try:
+                safe_body = request.body.decode('utf-8', errors='ignore') if request.body else None
+            except Exception:
+                safe_body = "Unable to read body (already parsed by DRF)"
+            
             return Response({
                 "debug_info": {
                     "content_type": getattr(request, 'content_type', 'unknown'),
                     "method": request.method,
                     "POST_data": dict(request.POST),
-                    "JSON_data": dict(request.data) if hasattr(request.data, 'items') else request.data,
+                    "JSON_data": dict(request.data) if hasattr(request.data, 'items') else str(request.data),
                     "query_params": dict(request.GET),
                     "headers": {k: v for k, v in request.headers.items()},
-                    "body": request.body.decode('utf-8', errors='ignore') if request.body else None,
-                    "extracted_fields": {
-                        "email": request.data.get('email') or request.data.get('username'),
-                        "api_key": request.data.get('api_key') or request.data.get('password'),
-                    }
+                    "body": safe_body,
+                    "extracted_fields": extracted_fields
                 }
             })
         except Exception as e:
+            # Bezpieczne czytanie body w exception handler
+            safe_body = None
+            try:
+                safe_body = request.body.decode('utf-8', errors='ignore') if request.body else None
+            except Exception:
+                safe_body = "Unable to read body (already parsed by DRF)"
+            
             return Response({
                 "debug_error": str(e),
-                "raw_body": request.body.decode('utf-8', errors='ignore') if request.body else None
+                "raw_body": safe_body,
+                "auth_header": auth_header,
+                "basic_auth_parsed": {"email": basic_email, "api_key": basic_api_key[:5] + "..." if basic_api_key else None}
             })
     
     User = get_user_model()
     
-    # Pobierz dane logowania - sprawdź wszystkie możliwe nazwy pól
-    email = (request.data.get('email') or 
-             request.data.get('username') or 
-             request.data.get('pilot_id') or
-             request.data.get('user_id'))
+    # Pobierz dane logowania - sprawdź wszystkie możliwe nazwy pól + Basic Auth
+    email = (safe_get_from_data('email') or 
+             safe_get_from_data('username') or 
+             safe_get_from_data('pilot_id') or
+             safe_get_from_data('user_id') or
+             basic_email)
     
-    api_key = (request.data.get('api_key') or 
-               request.data.get('password') or
-               request.data.get('key') or
-               request.data.get('token'))
+    api_key = (safe_get_from_data('api_key') or 
+               safe_get_from_data('password') or
+               safe_get_from_data('key') or
+               safe_get_from_data('token') or
+               basic_api_key)
     
     if not email or not api_key:
         return Response({
