@@ -72,6 +72,18 @@ def acars_login(request):
     # Handle GET requests (ACARS may send GET first to check endpoint)
     if request.method == 'GET':
         return Response({
+            "apiVersion": "1.0.2",
+            "handler": {
+                "name": "smartCARS 3 Pilot Login",
+                "version": "1.0.2",
+                "author": "Topsky Virtual Airlines",
+                "web": "https://dtopsky.topsky.app"
+            },
+            "phpvms": {
+                "version": "7.0.0",
+                "type": "Django Port"
+            },
+            "auth": True,
             "message": "Login endpoint ready. Send POST with username and password.",
             "methods": ["POST"],
             "fields": ["username", "password"]
