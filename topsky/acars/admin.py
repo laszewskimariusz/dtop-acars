@@ -4,53 +4,53 @@ from .models import ACARSMessage
 
 @admin.register(ACARSMessage)
 class ACARSMessageAdmin(admin.ModelAdmin):
-    list_display = ['timestamp', 'flight_number', 'aircraft_id', 'direction', 'route', 'user']
-    list_filter = ['direction', 'timestamp', 'aircraft_id']
-    search_fields = ['flight_number', 'aircraft_id', 'route']
+    """
+    Panel administracyjny dla wiadomości ACARS
+    """
+    list_display = [
+        'timestamp', 'user', 'aircraft_id', 'flight_number', 
+        'direction', 'latitude', 'longitude', 'altitude', 'speed'
+    ]
+    list_filter = [
+        'direction', 'timestamp', 'aircraft_id', 'user'
+    ]
+    search_fields = [
+        'aircraft_id', 'flight_number', 'user__username', 'user__email'
+    ]
     readonly_fields = ['timestamp']
     ordering = ['-timestamp']
+    date_hierarchy = 'timestamp'
     
     fieldsets = (
-        ('Podstawowe informacje', {
-            'fields': ('user', 'direction', 'timestamp')
+        ('Informacje podstawowe', {
+            'fields': ('user', 'timestamp', 'direction')
         }),
-        ('Identyfikacja lotu', {
+        ('Lot', {
             'fields': ('aircraft_id', 'flight_number', 'route')
         }),
-        ('Pozycja i ruch', {
-            'fields': ('latitude', 'longitude', 'altitude', 'speed', 'heading'),
-            'classes': ('collapse',)
+        ('Pozycja i parametry', {
+            'fields': ('latitude', 'longitude', 'altitude', 'speed', 'heading')
         }),
-        ('Czasy OOOI', {
-            'fields': ('time_off', 'time_on', 'estimated_over', 'estimated_ramp'),
-            'classes': ('collapse',)
+        ('Czas', {
+            'fields': ('time_off', 'time_on')
         }),
-        ('Parametry silników i paliwa', {
-            'fields': ('engine_n1', 'engine_epr', 'fuel_flow', 'fuel_on_board'),
-            'classes': ('collapse',)
+        ('Silnik', {
+            'fields': ('engine_n1', 'engine_epr', 'fuel_flow')
         }),
-        ('Stan systemów', {
-            'fields': ('maintenance_code', 'fault_report'),
-            'classes': ('collapse',)
+        ('Inne', {
+            'fields': ('pax_count', 'cost_index')
         }),
-        ('Warunki pogodowe', {
-            'fields': ('temperature_oat', 'wind_info'),
-            'classes': ('collapse',)
+        ('ACARS', {
+            'fields': ('transmission_mode', 'label', 'msg_number')
         }),
-        ('Pasażerowie i ładunek', {
-            'fields': ('pax_count', 'load_weight'),
-            'classes': ('collapse',)
-        }),
-        ('Operacje', {
-            'fields': ('cost_index', 'center_of_gravity'),
-            'classes': ('collapse',)
-        }),
-        ('Komunikacja', {
-            'fields': ('transmission_mode', 'label', 'msg_number'),
-            'classes': ('collapse',)
-        }),
-        ('Surowe dane', {
+        ('Dane surowe', {
             'fields': ('payload',),
             'classes': ('collapse',)
         }),
     )
+    
+    def get_queryset(self, request):
+        """
+        Optymalizuje zapytania do bazy danych
+        """
+        return super().get_queryset(request).select_related('user') 

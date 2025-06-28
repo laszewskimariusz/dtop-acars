@@ -1,42 +1,32 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ACARSMessageViewSet, 
-    acars_dashboard, 
-    smartcars_webhook,
-    smartcars_handler,
-    smartcars_auth_login,
-    smartcars_user_info,
-    smartcars_basic_data,
-    smartcars_schedules
+    ACARSMessageViewSet, ping, bulk_create_messages,
+    smartcars_handler, smartcars_login, smartcars_user, smartcars_basic_endpoint
 )
 
+# Router dla ViewSets
 router = DefaultRouter()
 router.register(r'messages', ACARSMessageViewSet, basename='acarsmessage')
 
+app_name = 'acars'
+
 urlpatterns = [
-    path('', acars_dashboard, name='acars_dashboard'),
-    path('webhook/', smartcars_webhook, name='smartcars_webhook'),
-    path('webhook', smartcars_webhook, name='smartcars_webhook_no_slash'),  # For apps that don't handle redirects
+    # Główny endpoint smartCARS - tylko dokładnie /api/ (musi być PIERWSZY)
+    re_path(r'^api/$', smartcars_handler, name='smartcars_handler'),
     
-    # SmartCARS API main handler (for compatibility check)
-    path('api/', smartcars_handler, name='smartcars_handler'),  # GET /acars/api/ - main handler info
-    path('api', smartcars_handler, name='smartcars_handler_no_slash'),  # without trailing slash
+    # Legacy endpoints dla kompatybilności z smartCARS (konkretne ścieżki)
+    path('api/login/', smartcars_login, name='smartcars_login'),
+    path('api/user/', smartcars_user, name='smartcars_user'),
+    path('api/schedules/', smartcars_basic_endpoint, {'endpoint_name': 'schedules'}, name='smartcars_schedules'),
+    path('api/aircraft/', smartcars_basic_endpoint, {'endpoint_name': 'aircraft'}, name='smartcars_aircraft'),
+    path('api/airports/', smartcars_basic_endpoint, {'endpoint_name': 'airports'}, name='smartcars_airports'),
     
-    # SmartCARS API endpoints (matching phpVMS structure)
-    path('api/login', smartcars_auth_login, name='smartcars_login'),  # POST /acars/api/login
-    path('api/user', smartcars_user_info, name='smartcars_user'),     # GET /acars/api/user
-    path('api/schedules', smartcars_schedules, name='smartcars_schedules'),  # GET /acars/api/schedules
-    path('api/aircraft', smartcars_basic_data, name='smartcars_aircraft'),   # GET /acars/api/aircraft  
-    path('api/airports', smartcars_basic_data, name='smartcars_airports'),   # GET /acars/api/airports
+    # Dodatkowe endpointy
+    path('api/ping/', ping, name='ping'),
+    path('api/bulk-create/', bulk_create_messages, name='bulk_create'),
+    path('api/messages/bulk/', bulk_create_messages, name='bulk_create_alias'),
     
-    # Legacy endpoints (for backward compatibility)
-    path('login', smartcars_auth_login, name='smartcars_login_legacy'),  
-    path('user', smartcars_user_info, name='smartcars_user_legacy'),     
-    path('schedules', smartcars_schedules, name='smartcars_schedules_legacy'),  
-    path('aircraft', smartcars_basic_data, name='smartcars_aircraft_legacy'),   
-    path('airports', smartcars_basic_data, name='smartcars_airports_legacy'),   
-    
-    # Django Rest Framework API
-    path('drf/', include(router.urls)),  # Moved to avoid conflicts
+    # Nowe API endpoints dla wiadomości ACARS (REST) - router
+    path('api/', include(router.urls)),
 ] 

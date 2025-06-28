@@ -3,73 +3,66 @@ from django.contrib.auth.models import User
 
 
 class ACARSMessage(models.Model):
-    # 1. Użytkownik
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        help_text="Użytkownik, który odebrał lub wysłał wiadomość"
+    """
+    Model dla wiadomości ACARS (Aircraft Communications Addressing and Reporting System)
+    Przechowuje wszystkie dane pobierane z urządzeń/systemów ACARS
+    """
+    # Relacja do użytkownika
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Użytkownik")
+    
+    # Podstawowe informacje o locie
+    aircraft_id = models.CharField(max_length=10, verbose_name="ID Samolotu")
+    flight_number = models.CharField(max_length=10, blank=True, verbose_name="Numer Lotu")
+    route = models.CharField(max_length=50, blank=True, verbose_name="Trasa")
+    
+    # Pozycja i parametry lotu
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name="Szerokość geograficzna")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name="Długość geograficzna")
+    altitude = models.IntegerField(null=True, blank=True, verbose_name="Wysokość (ft)")
+    speed = models.IntegerField(null=True, blank=True, verbose_name="Prędkość (kts)")
+    heading = models.IntegerField(null=True, blank=True, verbose_name="Kurs (°)")
+    
+    # Czasy OOOI (Out-Off-On-In)
+    time_off = models.TimeField(null=True, blank=True, verbose_name="Czas startu")
+    time_on = models.TimeField(null=True, blank=True, verbose_name="Czas lądowania")
+    
+    # Parametry silnika
+    engine_n1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name="N1 (%)")
+    engine_epr = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name="EPR")
+    fuel_flow = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, verbose_name="Przepływ paliwa (kg/h)")
+    
+    # Inne parametry lotu
+    pax_count = models.IntegerField(null=True, blank=True, verbose_name="Liczba pasażerów")
+    cost_index = models.IntegerField(null=True, blank=True, verbose_name="Indeks kosztów")
+    
+    # Parametry wiadomości ACARS
+    transmission_mode = models.CharField(max_length=4, blank=True, verbose_name="Tryb transmisji")
+    label = models.CharField(max_length=2, blank=True, verbose_name="Etykieta wiadomości")
+    msg_number = models.IntegerField(null=True, blank=True, verbose_name="Numer wiadomości")
+    
+    # Metadane
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Czas otrzymania")
+    direction = models.CharField(
+        max_length=4, 
+        choices=[
+            ('IN', 'Przychodzące'),
+            ('OUT', 'Wychodzące')
+        ],
+        verbose_name="Kierunek wiadomości"
     )
-
-    # 2. Identyfikacja lotu i trasa
-    aircraft_id   = models.CharField(max_length=10, help_text="Rejestracja statku powietrznego")
-    flight_number = models.CharField(max_length=10, blank=True, help_text="Numer lotu")
-    route         = models.CharField(max_length=50, blank=True, help_text="Trasa: np. 'WAW-JFK'")
-
-    # 3. Pozycja i ruch
-    latitude   = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Szerokość geograficzna")
-    longitude  = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Długość geograficzna")
-    altitude   = models.IntegerField(null=True, blank=True, help_text="Wysokość w stopach")
-    speed      = models.IntegerField(null=True, blank=True, help_text="Prędkość w węzłach (TAS/IAS)")
-    heading    = models.IntegerField(null=True, blank=True, help_text="Kierunek w stopniach")
-
-    # 4. Czasy OOOI i szacowane
-    time_off         = models.TimeField(null=True, blank=True, help_text="OF – Time Off (odlot z bramki)")
-    time_on          = models.TimeField(null=True, blank=True, help_text="ON – Time On (przylot na pas)")
-    estimated_over   = models.TimeField(null=True, blank=True, help_text="EO – Estimated Time Over")
-    estimated_ramp   = models.TimeField(null=True, blank=True, help_text="ERT – Estimated Ramp Time")
-
-    # 5. Parametry silników i paliwa
-    engine_n1        = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="N1 – prędkość turbiny niskiego stopnia")
-    engine_epr       = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="EPR – Exhaust Pressure Ratio")
-    fuel_flow        = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, help_text="FF – Fuel Flow")
-    fuel_on_board    = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="FOB – Fuel On Board")
-
-    # 6. Stan systemów i utrzymanie
-    maintenance_code = models.CharField(max_length=10, blank=True, help_text="MN – kod konserwacji")
-    fault_report     = models.CharField(max_length=50, blank=True, help_text="FLR – opis błędu/usterki")
-
-    # 7. Warunki pogodowe
-    temperature_oat  = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="OAT – Outside Air Temperature")
-    wind_info        = models.CharField(max_length=50, blank=True, help_text="WND – informacje o wietrze")
-
-    # 8. Pasażerowie i ładunek
-    pax_count        = models.IntegerField(null=True, blank=True, help_text="PAX – liczba pasażerów")
-    load_weight      = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="ZW – Zero Fuel Weight")
-
-    # 9. Operacje i planowanie
-    cost_index       = models.IntegerField(null=True, blank=True, help_text="CI – Cost Index")
-    center_of_gravity= models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="CG – Center of Gravity")
-
-    # 10. Komunikacja i nagłówki
-    transmission_mode= models.CharField(max_length=4, blank=True, help_text="Tryb transmisji (A/B etc.)")
-    label            = models.CharField(max_length=2, blank=True, help_text="Label – dwuznakowy kod wiadomości")
-    msg_number       = models.IntegerField(null=True, blank=True, help_text="Msg No. – numer sekwencji wiadomości")
-
-    # 11. Kierunek i znacznik czasu
-    timestamp  = models.DateTimeField(auto_now_add=True, help_text="Data i czas odbioru lub wysłania")
-    direction  = models.CharField(
-        max_length=4,
-        choices=[('IN', 'Incoming'), ('OUT', 'Outgoing')],
-        help_text="Kierunek komunikatu"
-    )
-
-    # 12. Surowe dane
-    payload    = models.JSONField(help_text="Pełny, surowy JSON komunikatu ACARS")
-
+    
+    # Pełne dane JSON z urządzenia ACARS
+    payload = models.JSONField(verbose_name="Pełne dane JSON")
+    
     class Meta:
+        verbose_name = "Wiadomość ACARS"
+        verbose_name_plural = "Wiadomości ACARS"
         ordering = ['-timestamp']
-        verbose_name = "Komunikat ACARS"
-        verbose_name_plural = "Komunikaty ACARS"
-
+        indexes = [
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['aircraft_id', '-timestamp']),
+            models.Index(fields=['flight_number', '-timestamp']),
+        ]
+    
     def __str__(self):
-        return f"{self.flight_number or self.aircraft_id} ({self.aircraft_id}) – {self.direction} @ {self.timestamp}"
+        return f"ACARS {self.aircraft_id} - {self.flight_number or 'N/A'} ({self.timestamp.strftime('%Y-%m-%d %H:%M')})" 
