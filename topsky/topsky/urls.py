@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from rest_framework_simplejwt.views import (
@@ -40,6 +40,9 @@ urlpatterns = [
     
     # Official smartCARS 3 API (compatible with TFDi Design smartCARS 3)
     path('api/smartcars/', include('acars.smartcars_urls')),
+    
+    # smartCARS 3 compatibility - handle URL without trailing slash
+    re_path(r'^api/smartcars$', include('acars.smartcars_urls')),
     
     # URL aliases for Django's password reset email templates (without namespace)
     path('auth/password-reset/done/', 
