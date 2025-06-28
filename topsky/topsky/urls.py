@@ -44,6 +44,12 @@ urlpatterns = [
     # smartCARS 3 compatibility - handle URL without trailing slash
     re_path(r'^api/smartcars$', include('acars.smartcars_urls')),
     
+    # Topsky Plugin API - Custom smartCARS implementation
+    path('api/topskyplugin/', include('acars.topsky_plugin_urls')),
+    
+    # ACARS Bridge Plugin API
+    path('api/', include('acars.acars_bridge_urls')),
+    
     # URL aliases for Django's password reset email templates (without namespace)
     path('auth/password-reset/done/', 
          auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'),

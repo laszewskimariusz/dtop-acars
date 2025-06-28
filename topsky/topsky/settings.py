@@ -219,9 +219,7 @@ if not DEBUG:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-        # SessionAuthentication wyłączone dla kompatybilności z smartCARS (brak CSRF)
-        # 'rest_framework.authentication.SessionAuthentication',
+        # SessionAuthentication usunięte dla kompatybilności z smartCARS plugin
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -233,14 +231,13 @@ REST_FRAMEWORK = {
 # JWT Configuration
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),  # 7 dni dla smartCARS plugin
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'BLACKLIST_AFTER_ROTATION': True,
-    # SmartCARS compatibility: dodaj 'sub' claim do JWT payload
     'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',  # Zachowaj również user_id dla kompatybilności Django
+    'USER_ID_CLAIM': 'user_id',
 }
 
 # CORS Configuration for smartCARS compatibility

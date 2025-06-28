@@ -996,4 +996,231 @@ def smartcars_pirep(request):
     except Exception as e:
         return Response({
             "message": "Invalid session token"
-        }, status=status.HTTP_401_UNAUTHORIZED) 
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@parser_classes([JSONParser, FormParser])
+def topsky_smartcars_login(request):
+    """
+    Topsky Plugin Login Endpoint
+    Dedykowany endpoint dla pluginu smartCARS 3 Topsky
+    Obsługuje różne formaty danych i zwraca format legacy dla zgodności
+    """
+    from .models import SmartcarsProfile
+    from rest_framework_simplejwt.tokens import RefreshToken
+    from django.utils import timezone
+    from datetime import timedelta
+    import base64
+    
+    # Obsługa Basic Auth
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Basic '):
+        try:
+            creds = base64.b64decode(auth_header.split(' ')[1]).decode()
+            email, api_key = creds.split(':', 1)
+        except (ValueError, IndexError):
+            return Response({"error": "Invalid Basic Auth format"}, status=401)
+    else:
+        # Obsługa różnych formatów JSON/Form data
+        data = request.data
+        email = (data.get('email') or 
+                data.get('username') or 
+                data.get('user'))
+        api_key = (data.get('api_key') or 
+                  data.get('password') or 
+                  data.get('pass'))
+    
+    if not email or not api_key:
+        return Response({"error": "Email and API key are required"}, status=400)
+    
+    # Pobranie użytkownika
+    User = get_user_model()
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        # Spróbuj po username jako fallback
+        try:
+            user = User.objects.get(username__iexact=email)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid credentials"}, status=401)
+    
+    # Weryfikacja klucza API lub hasła
+    valid = False
+    
+    # Najpierw sprawdź SmartcarsProfile API key
+    try:
+        profile = SmartcarsProfile.objects.get(user=user)
+        if profile.api_key == api_key:
+            valid = True
+            # Aktualizuj ostatnie użycie
+            profile.last_used = timezone.now()
+            profile.save()
+    except SmartcarsProfile.DoesNotExist:
+        pass
+    
+    # Jeśli API key nie pasuje, sprawdź hasło Django
+    if not valid and user.check_password(api_key):
+        valid = True
+    
+    if not valid or not user.is_active:
+        return Response({"error": "Invalid credentials"}, status=401)
+    
+    # Generacja JWT token
+    refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+    
+    # Oblicz czas wygaśnięcia (7 dni od teraz)
+    expiry_time = timezone.now() + timedelta(days=7)
+    expiry_timestamp = int(expiry_time.timestamp())
+    
+    # Zwróć w formacie legacy smartCARS dla kompatybilności
+    return Response({
+        "pilotID": f"LO{user.id:04d}",
+        "session": access_token,
+        "expiry": expiry_timestamp,
+        "firstName": user.first_name or "",
+        "lastName": user.last_name or "",
+        "email": user.email
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@parser_classes([JSONParser])
+def acars_bridge_login(request):
+    """
+    ACARS Bridge Plugin Login Endpoint
+    Dedykowany endpoint dla pluginu Topsky ACARS Bridge
+    
+    Specyfikacja:
+    POST /api/acars-login/
+    Request: {"pilot_id": "string", "callsign": "string", "name": "string", "email": "string"}
+    Response: {"success": bool, "message": "string", "data": {...}} lub {"success": false, "error": "string", "code": "string"}
+    """
+    from .models import SmartcarsProfile, ACARSMessage
+    from django.utils import timezone
+    from rest_framework_simplejwt.tokens import RefreshToken
+    import uuid
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+    
+    try:
+        # Parse request data
+        data = request.data
+        pilot_id = data.get('pilot_id')
+        callsign = data.get('callsign')
+        name = data.get('name')
+        email = data.get('email')
+        
+        # Validate required fields
+        if not all([pilot_id, callsign, name, email]):
+            logger.warning(f"ACARS Bridge login attempt with missing fields from {client_ip}")
+            return Response({
+                'success': False,
+                'error': 'Missing required fields: pilot_id, callsign, name, email',
+                'code': 'MISSING_FIELDS'
+            }, status=400)
+        
+        # Find pilot in database by email (primary lookup)
+        User = get_user_model()
+        try:
+            pilot = User.objects.get(email__iexact=email, is_active=True)
+        except User.DoesNotExist:
+            # Log failed attempt
+            logger.warning(f"ACARS Bridge login failed - pilot not found: {pilot_id}, {email} from {client_ip}")
+            return Response({
+                'success': False,
+                'error': 'Pilot not found or account inactive',
+                'code': 'PILOT_NOT_FOUND'
+            }, status=401)
+        
+        # Check if pilot has SmartcarsProfile (ACARS permission)
+        try:
+            smartcars_profile = SmartcarsProfile.objects.get(user=pilot, is_active=True)
+        except SmartcarsProfile.DoesNotExist:
+            logger.warning(f"ACARS Bridge login failed - no ACARS permission: {pilot_id}, {email} from {client_ip}")
+            return Response({
+                'success': False,
+                'error': 'No ACARS permission. Contact administrator to enable ACARS access.',
+                'code': 'PERMISSION_DENIED'
+            }, status=403)
+        
+        # Update pilot data from smartCARS
+        # Note: We could store callsign and smartcars pilot_id for future reference
+        pilot.first_name = name.split(' ')[0] if name else pilot.first_name
+        pilot.last_name = ' '.join(name.split(' ')[1:]) if ' ' in name else pilot.last_name
+        pilot.last_login = timezone.now()
+        pilot.save()
+        
+        # Update SmartcarsProfile with latest activity
+        smartcars_profile.last_used = timezone.now()
+        smartcars_profile.save()
+        
+        # Generate session token (using JWT)
+        refresh = RefreshToken.for_user(pilot)
+        session_token = str(refresh.access_token)
+        
+        # Calculate expiration (7 days from now)
+        expires_at = timezone.now() + timezone.timedelta(days=7)
+        
+        # Get pilot rank and airline (if available from profile or defaults)
+        rank = "Captain" if pilot.is_staff else "First Officer" if pilot.groups.filter(name='pilots').exists() else "Pilot"
+        airline = "Topsky Virtual Airlines"
+        
+        # Build permissions list
+        permissions = ["flight", "acars"]
+        if pilot.is_staff:
+            permissions.append("dispatch")
+            permissions.append("admin")
+        
+        # Log successful login
+        logger.info(f"ACARS Bridge login successful: {pilot_id} ({pilot.email}) as {callsign} from {client_ip}")
+        
+        # Create login record in ACARS messages (optional tracking)
+        try:
+            ACARSMessage.objects.create(
+                user=pilot,
+                aircraft_id=callsign,
+                direction='IN',
+                payload={
+                    'event': 'acars_bridge_login',
+                    'pilot_id': pilot_id,
+                    'callsign': callsign,
+                    'client_ip': client_ip,
+                    'timestamp': timezone.now().isoformat()
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to create ACARS login record: {e}")
+        
+        # Return success response
+        return Response({
+            'success': True,
+            'message': 'Login successful',
+            'data': {
+                'session_id': session_token,
+                'pilot_data': {
+                    'id': pilot_id,  # Use smartCARS pilot_id as provided
+                    'callsign': callsign,
+                    'name': name,
+                    'email': pilot.email,
+                    'rank': rank,
+                    'airline': airline
+                },
+                'permissions': permissions,
+                'expires_at': expires_at.isoformat()
+            }
+        })
+        
+    except Exception as e:
+        # Log internal error with details
+        logger.error(f"ACARS Bridge login internal error from {client_ip}: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': 'Internal server error. Please try again later.',
+            'code': 'SERVER_ERROR'
+        }, status=500) 
