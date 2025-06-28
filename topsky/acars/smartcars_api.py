@@ -52,7 +52,7 @@ def debug_login(request):
     })
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 @parser_classes([FormParser, JSONParser])
 def acars_login(request):
@@ -69,7 +69,15 @@ def acars_login(request):
     logger = logging.getLogger(__name__)
     User = get_user_model()
     
-    # Debug logging
+    # Handle GET requests (ACARS may send GET first to check endpoint)
+    if request.method == 'GET':
+        return Response({
+            "message": "Login endpoint ready. Send POST with username and password.",
+            "methods": ["POST"],
+            "fields": ["username", "password"]
+        }, status=status.HTTP_200_OK)
+    
+    # Debug logging for POST requests
     print(">> ACARS_LOGIN request.content_type:", request.content_type)
     print(">> ACARS_LOGIN request.data:", request.data)
     
