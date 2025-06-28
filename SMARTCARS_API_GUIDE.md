@@ -1,5 +1,15 @@
 # smartCARS 3 API - Przewodnik integracji
 
+## 🚨 QUICK FIX dla błędu "301 - Redirects Are Not Allowed"
+
+**W smartCARS Central użyj DOKŁADNIE tego URL-a:**
+```
+https://dtopsky.topsky.app/api/smartcars/
+```
+**⚠️ Ważne: z `https://` i z `/` na końcu!**
+
+---
+
 ## Opis
 
 To jest 1:1 kompatybilne API smartCARS 3 dla Topsky Virtual Airlines, bazujące na oficjalnej specyfikacji phpVMS.
@@ -147,23 +157,50 @@ GET /acars/api/debug/
 
 Pokazuje ostatnie 20 requestów z danymi debugowania.
 
-## Problemy z logowaniem
+## ⚠️ Problem: "301 - Redirects Are Not Allowed"
 
-Jeśli smartCARS nie może się zalogować:
+Ten błąd oznacza że smartCARS dostaje redirect zamiast bezpośredniej odpowiedzi.
+
+### 🔧 Rozwiązanie:
+
+**1. Użyj DOKŁADNEGO URL-a w smartCARS Central:**
+```
+https://dtopsky.topsky.app/api/smartcars/
+```
+
+**⚠️ Unikaj tych URL-ów (powodują redirecty):**
+```
+❌ http://dtopsky.topsky.app/api/smartcars/     # HTTP → HTTPS redirect
+❌ https://dtopsky.topsky.app/api/smartcars     # brak / → dodanie / redirect  
+❌ https://www.dtopsky.topsky.app/api/smartcars/ # www → non-www redirect
+```
+
+**2. W smartCARS Central:**
+- **Script URL**: `https://dtopsky.topsky.app/api/smartcars/`
+- **Plugin**: Standard phpVMS 7 
+- **Sprawdź "Test Connection"** - powinno być ✅ zielone
+
+**3. Jeśli dalej masz problem (opcjonalne):**
+Dodaj middleware w `settings.py`:
+```python
+MIDDLEWARE = [
+    # ... inne middleware ...
+    'acars.middleware.SmartCARSHTTPSMiddleware',  # Wymuszenie HTTPS
+    'acars.middleware.SmartCARSCORSMiddleware',   # Nagłówki CORS
+]
+```
+
+### 🔍 Inne problemy logowania:
 
 1. **Sprawdź dane logowania:**
    - Użyj **emaila** jako username
    - Użyj **hasła Django** (nie token!)
 
-2. **Sprawdź URL-e:**
-   - API: `https://yourdomain.com/api/smartcars/`
-   - Login: `https://yourdomain.com/api/smartcars/login`
-
-3. **Sprawdź logi:**
+2. **Sprawdź logi:**
    - `tail -f logs/django.log` (debugging info)
    - `GET /acars/api/debug/` (ostatnie requesty)
 
-4. **Upewnij się że:**
+3. **Upewnij się że:**
    - Użytkownik ma aktywne konto
    - Ma utworzony SmartcarsProfile
    - Serwer akceptuje `Content-Type: application/x-www-form-urlencoded`

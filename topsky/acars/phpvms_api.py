@@ -28,15 +28,16 @@ def get_client_ip(request):
 
 
 @csrf_exempt
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "POST", "HEAD"])
 def api_handler(request):
     """
     Official smartCARS 3 API Handler - Main Entry Point
     URL: /api/smartcars/
     
     Returns handler information compatible with smartCARS 3 specification
+    Handles HEAD requests that smartCARS often sends to verify endpoint
     """
-    return JsonResponse({
+    response_data = {
         "apiVersion": "1.0.2",
         "handler": {
             "name": "smartCARS 3 Django Handler",
@@ -50,7 +51,16 @@ def api_handler(request):
         },
         "auth": True,
         "time": datetime.datetime.now().isoformat() + "Z"
-    })
+    }
+    
+    # For HEAD requests, return empty response with correct headers
+    if request.method == "HEAD":
+        response = JsonResponse(response_data)
+        response['Content-Length'] = '0'
+        response.content = b''
+        return response
+    
+    return JsonResponse(response_data)
 
 
 @csrf_exempt
