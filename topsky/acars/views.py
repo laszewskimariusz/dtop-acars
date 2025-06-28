@@ -18,6 +18,38 @@ def acars_dashboard(request):
     """Renderuje stronę z interfejsem ACARS"""
     return render(request, 'acars/dashboard.html')
 
+@csrf_exempt  
+@require_http_methods(["GET"])
+def smartcars_handler(request):
+    """
+    Główny endpoint smartCARS API - pokazuje informacje o handlerze
+    Kompatybilny z oczekiwaniami smartCARS 3 od TFDi Design
+    """
+    return JsonResponse({
+        "apiVersion": "1.0.0",
+        "handler": {
+            "name": "Django ACARS Handler",
+            "version": "1.0.0", 
+            "author": "Topsky Virtual Airlines",
+            "website": "https://dtopsky.topsky.app"
+        },
+        "status": "success",
+        "response": "smartCARS API Handler is active and ready",
+        "data": {
+            "platform": "Django",
+            "phpvms_version": "7.0.0", # Symulacja phpVMS 7 dla kompatybilności
+            "features": ["ACARS", "Position Reporting", "Flight Tracking", "Authentication"],
+            "endpoints": {
+                "login": "/acars/api/login",
+                "user": "/acars/api/user", 
+                "schedules": "/acars/api/schedules",
+                "aircraft": "/acars/api/aircraft",
+                "airports": "/acars/api/airports",
+                "webhook": "/acars/webhook"
+            }
+        }
+    })
+
 @csrf_exempt
 @require_http_methods(["POST", "GET"])
 def smartcars_webhook(request):
@@ -117,7 +149,7 @@ class ACARSMessageViewSet(viewsets.ModelViewSet):
 @require_http_methods(["POST"])
 def smartcars_auth_login(request):
     """
-    SmartCARS authentication endpoint
+    SmartCARS authentication endpoint - kompatybilny z phpVMS
     """
     try:
         if request.content_type == 'application/json':
@@ -125,12 +157,13 @@ def smartcars_auth_login(request):
         else:
             data = dict(request.POST.items())
         
-        username = data.get('username') or data.get('email')
+        # SmartCARS może wysyłać jako 'email' lub 'username'
+        username = data.get('username') or data.get('email') or data.get('pilot_id')
         password = data.get('password')
         
         if not username or not password:
             return JsonResponse({
-                "success": False,
+                "status": "error",
                 "message": "Username and password required"
             }, status=400)
         
@@ -148,29 +181,37 @@ def smartcars_auth_login(request):
             # Create or get token
             token, created = Token.objects.get_or_create(user=user)
             
+            # phpVMS compatible response format
             return JsonResponse({
-                "success": True,
+                "status": "success",
                 "message": "Login successful",
                 "data": {
-                    "token": token.key,
-                    "user": {
-                        "id": user.id,
-                        "username": user.username,
-                        "email": user.email,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name
-                    }
+                    "id": user.id,
+                    "pilot_id": user.id,
+                    "name": f"{user.first_name} {user.last_name}".strip() or user.username,
+                    "email": user.email,
+                    "country": "PL",  # Default country
+                    "timezone": "Europe/Warsaw",  # Default timezone
+                    "curr_airport_id": "EPWA",  # Default current airport
+                    "home_airport_id": "EPWA",  # Default home airport
+                    "flights": 0,  # Default flight count
+                    "flight_time": 0,  # Default flight time
+                    "transfer_time": 0,  # Default transfer time
+                    "rank_id": 1,  # Default rank
+                    "api_key": token.key,  # API token
+                    "created_at": user.date_joined.isoformat(),
+                    "updated_at": user.date_joined.isoformat()
                 }
             })
         else:
             return JsonResponse({
-                "success": False, 
-                "message": "Invalid credentials"
+                "status": "error", 
+                "message": "Invalid login credentials"
             }, status=401)
             
     except Exception as e:
         return JsonResponse({
-            "success": False,
+            "status": "error",
             "message": f"Authentication error: {str(e)}"
         }, status=500)
 
@@ -178,37 +219,53 @@ def smartcars_auth_login(request):
 @require_http_methods(["GET"])
 def smartcars_user_info(request):
     """
-    SmartCARS user info endpoint
+    SmartCARS user info endpoint - kompatybilny z phpVMS
     """
-    # Get token from Authorization header
+    # Get token from Authorization header or api_key parameter
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    if not auth_header.startswith('Bearer '):
-        return JsonResponse({
-            "success": False,
-            "message": "Authorization header required"
-        }, status=401)
+    api_key = request.GET.get('api_key', '')
     
-    token_key = auth_header.replace('Bearer ', '')
+    token_key = ''
+    if auth_header.startswith('Bearer '):
+        token_key = auth_header.replace('Bearer ', '')
+    elif api_key:
+        token_key = api_key
+    else:
+        return JsonResponse({
+            "status": "error",
+            "message": "Authorization header or api_key parameter required"
+        }, status=401)
     
     try:
         token = Token.objects.get(key=token_key)
         user = token.user
         
+        # phpVMS compatible response format
         return JsonResponse({
-            "success": True,
+            "status": "success",
             "data": {
                 "id": user.id,
-                "username": user.username,
+                "pilot_id": user.id,
+                "name": f"{user.first_name} {user.last_name}".strip() or user.username,
                 "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "is_active": user.is_active
+                "country": "PL",  # Default country
+                "timezone": "Europe/Warsaw",  # Default timezone
+                "curr_airport_id": "EPWA",  # Default current airport
+                "home_airport_id": "EPWA",  # Default home airport
+                "flights": 0,  # Default flight count
+                "flight_time": 0,  # Default flight time
+                "transfer_time": 0,  # Default transfer time
+                "rank_id": 1,  # Default rank
+                "state": 1,  # Active state
+                "is_active": user.is_active,
+                "created_at": user.date_joined.isoformat(),
+                "updated_at": user.date_joined.isoformat()
             }
         })
     except Token.DoesNotExist:
         return JsonResponse({
-            "success": False,
-            "message": "Invalid token"
+            "status": "error",
+            "message": "Invalid API key"
         }, status=401)
 
 @csrf_exempt
@@ -216,10 +273,36 @@ def smartcars_user_info(request):
 def smartcars_basic_data(request):
     """
     SmartCARS basic data endpoint - airports, aircraft, etc.
+    Kompatybilny z phpVMS - obsługuje autoryzację przez api_key
     """
+    # Get token from Authorization header or api_key parameter
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    api_key = request.GET.get('api_key', '')
+    
+    token_key = ''
+    if auth_header.startswith('Bearer '):
+        token_key = auth_header.replace('Bearer ', '')
+    elif api_key:
+        token_key = api_key
+    else:
+        return JsonResponse({
+            "status": "error",
+            "message": "Authorization required - provide api_key parameter or Authorization header"
+        }, status=401)
+    
+    # Verify token
+    try:
+        token = Token.objects.get(key=token_key)
+        user = token.user
+    except Token.DoesNotExist:
+        return JsonResponse({
+            "status": "error",
+            "message": "Invalid API key"
+        }, status=401)
+    
     # Basic mock data for smartCARS to function
     return JsonResponse({
-        "success": True,
+        "status": "success",
         "data": {
             "airports": [
                 {
@@ -230,7 +313,12 @@ def smartcars_basic_data(request):
                     "city": "Warsaw",
                     "country": "Poland",
                     "latitude": 52.1657,
-                    "longitude": 20.9671
+                    "longitude": 20.9671,
+                    "elevation": 374,
+                    "timezone": "Europe/Warsaw",
+                    "fuel_100ll_cost": 0,
+                    "fuel_jeta_cost": 0,
+                    "ground_handling_cost": 50
                 },
                 {
                     "id": 2,
@@ -240,23 +328,40 @@ def smartcars_basic_data(request):
                     "city": "Krakow",
                     "country": "Poland",
                     "latitude": 50.0777,
-                    "longitude": 19.7848
+                    "longitude": 19.7848,
+                    "elevation": 794,
+                    "timezone": "Europe/Warsaw",
+                    "fuel_100ll_cost": 0,
+                    "fuel_jeta_cost": 0,
+                    "ground_handling_cost": 50
                 }
             ],
             "aircraft": [
                 {
                     "id": 1,
                     "registration": "SP-LWA",
-                    "type": "Boeing 737-800",
+                    "name": "Boeing 737-800",
                     "icao": "B738",
-                    "active": True
+                    "active": 1,
+                    "fuel_type": 1,
+                    "max_weight": 79000,
+                    "empty_weight": 41145,
+                    "max_fuel": 26020,
+                    "cruise_altitude": 37000,
+                    "cruise_speed": 453
                 },
                 {
                     "id": 2, 
                     "registration": "SP-LWB",
-                    "type": "Boeing 737-MAX 8",
+                    "name": "Boeing 737-MAX 8",
                     "icao": "B38M",
-                    "active": True
+                    "active": 1,
+                    "fuel_type": 1,
+                    "max_weight": 82190,
+                    "empty_weight": 45070,
+                    "max_fuel": 25816,
+                    "cruise_altitude": 41000,
+                    "cruise_speed": 453
                 }
             ],
             "airlines": [
@@ -265,7 +370,8 @@ def smartcars_basic_data(request):
                     "icao": "LOT",
                     "iata": "LO", 
                     "name": "LOT Polish Airlines",
-                    "active": True
+                    "active": 1,
+                    "country": "Poland"
                 }
             ]
         }
@@ -276,42 +382,70 @@ def smartcars_basic_data(request):
 def smartcars_schedules(request):
     """
     SmartCARS schedules endpoint - flight schedules
+    Kompatybilny z phpVMS - obsługuje autoryzację przez api_key
     """
+    # Get token from Authorization header or api_key parameter
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    api_key = request.GET.get('api_key', '')
+    
+    token_key = ''
+    if auth_header.startswith('Bearer '):
+        token_key = auth_header.replace('Bearer ', '')
+    elif api_key:
+        token_key = api_key
+    else:
+        return JsonResponse({
+            "status": "error",
+            "message": "Authorization required - provide api_key parameter or Authorization header"
+        }, status=401)
+    
+    # Verify token
+    try:
+        token = Token.objects.get(key=token_key)
+        user = token.user
+    except Token.DoesNotExist:
+        return JsonResponse({
+            "status": "error",
+            "message": "Invalid API key"
+        }, status=401)
+    
     # Mock flight schedules data for smartCARS
     return JsonResponse({
-        "success": True,
+        "status": "success",
         "data": [
             {
                 "id": 1,
                 "code": "LO123",
                 "flight_number": "123", 
-                "route_code": "EPWA-EPKK",
                 "airline_id": 1,
                 "aircraft_id": 1,
                 "dpt_airport_id": "EPWA",
                 "arr_airport_id": "EPKK", 
                 "dpt_time": "08:00",
                 "arr_time": "09:30",
-                "flight_time": "01:30",
-                "distance": 252,
+                "flight_time": 90,  # w minutach
+                "distance": 252,    # w milach morskich
                 "route": "EPWA DCT EPKK",
-                "active": True
+                "notes": "Regular scheduled service",
+                "active": 1,
+                "days": "1234567"  # wszystkie dni tygodnia
             },
             {
                 "id": 2,
                 "code": "LO456",
                 "flight_number": "456",
-                "route_code": "EPKK-EPWA", 
                 "airline_id": 1,
                 "aircraft_id": 1,
                 "dpt_airport_id": "EPKK",
                 "arr_airport_id": "EPWA",
                 "dpt_time": "10:00", 
                 "arr_time": "11:30",
-                "flight_time": "01:30",
+                "flight_time": 90,
                 "distance": 252,
                 "route": "EPKK DCT EPWA",
-                "active": True
+                "notes": "Return service",
+                "active": 1,
+                "days": "1234567"
             }
         ]
     })
