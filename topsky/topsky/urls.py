@@ -35,8 +35,11 @@ urlpatterns = [
     path('api/auth/login/', TokenObtainPairView.as_view(), name='acars_login'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='acars_refresh'),
     
-    # ACARS API
+    # ACARS API (legacy)
     path('acars/', include('acars.urls')),
+    
+    # Official smartCARS 3 API (compatible with TFDi Design smartCARS 3)
+    path('api/smartcars/', include('acars.smartcars_urls')),
     
     # URL aliases for Django's password reset email templates (without namespace)
     path('auth/password-reset/done/', 

@@ -2,7 +2,8 @@ from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from .views import (
     ACARSMessageViewSet, ping, bulk_create_messages,
-    smartcars_handler, smartcars_login, smartcars_user, smartcars_basic_endpoint
+    smartcars_handler, smartcars_login, smartcars_user, smartcars_basic_endpoint,
+    debug_requests
 )
 
 # Router dla ViewSets
@@ -32,6 +33,7 @@ urlpatterns = [
     path('api/ping/', ping, name='ping'),
     path('api/bulk-create/', bulk_create_messages, name='bulk_create'),
     path('api/messages/bulk/', bulk_create_messages, name='bulk_create_alias'),
+    path('api/debug/', debug_requests, name='debug_requests'),  # Panel debugowy
     
     # Nowe API endpoints dla wiadomości ACARS (REST) - router
     path('api/', include(router.urls)),
