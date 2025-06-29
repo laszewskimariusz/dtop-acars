@@ -102,7 +102,7 @@ if 'healthcheck.railway.app' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('healthcheck.railway.app')
 
 print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
-print("STATIC_URL:", STATIC_URL)
+#print("STATIC_URL:", STATIC_URL)
 
 
 # Application definition
