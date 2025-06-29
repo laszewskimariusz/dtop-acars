@@ -25,7 +25,7 @@ from rest_framework_simplejwt.views import (
 )
 
 def health_check(request):
-    return HttpResponse("OK", content_type="text/plain")
+    return HttpResponse("OK", content_type="text/plain", status=200)
 
 urlpatterns = [
     # Health check

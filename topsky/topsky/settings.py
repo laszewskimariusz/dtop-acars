@@ -49,6 +49,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'django.security.DisallowedHost': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
     },
 }
 
@@ -82,6 +87,7 @@ print("DATABASE_URL exists:", bool(os.getenv("DATABASE_URL")))
 print("RAILWAY_STATIC_URL exists:", bool(os.getenv("RAILWAY_STATIC_URL")))
 print("DEBUG mode:", DEBUG)
 print("IS_RAILWAY:", IS_RAILWAY)
+print("PORT:", os.getenv("PORT", "8000"))
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
@@ -91,7 +97,12 @@ if os.getenv('RAILWAY_STATIC_URL'):
     if railway_domain not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(railway_domain)
 
+# Add Railway healthcheck domain
+if 'healthcheck.railway.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('healthcheck.railway.app')
+
 print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
+print("STATIC_URL:", STATIC_URL)
 
 
 # Application definition
@@ -293,6 +304,10 @@ if os.getenv('RAILWAY_STATIC_URL'):
         railway_url = 'https://' + railway_url.split('://')[-1]
     if railway_url not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(railway_url)
+
+# Add Railway healthcheck domain to CSRF
+if 'https://healthcheck.railway.app' not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append('https://healthcheck.railway.app')
 
 print("CSRF_TRUSTED_ORIGINS:", CSRF_TRUSTED_ORIGINS)
 
