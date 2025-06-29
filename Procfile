@@ -1,0 +1,1 @@
+web: cd topsky && python manage.py collectstatic --noinput && gunicorn topsky.wsgi:application --bind 0.0.0.0:$PORT 
