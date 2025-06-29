@@ -216,3 +216,4 @@ test_smartcars_*.py
 test_jwt_*.py
 check_*.py
 acars_client_example.py
+generate_secret_key.py

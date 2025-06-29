@@ -12,11 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 from urllib.parse import urlparse, parse_qsl
 
-# Load environment variables from .env file if it exists
-load_dotenv()
+# load_dotenv is ONLY for local dev
+if os.getenv("RAILWAY_STATIC_URL") is None:
+    from dotenv import load_dotenv
+    load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,6 +30,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is not set")
+
+# Debug: Check SECRET_KEY length (temporary for debugging)
+print("SECRET_KEY length:", len(SECRET_KEY) if SECRET_KEY else 0)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
