@@ -44,6 +44,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
@@ -68,15 +73,25 @@ if not SECRET_KEY:
 print("SECRET_KEY length:", len(SECRET_KEY) if SECRET_KEY else 0)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Temporary DEBUG=True to diagnose 502 errors
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+# Check if we're on Railway production
+IS_RAILWAY = os.getenv('RAILWAY_STATIC_URL') is not None
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true' and not IS_RAILWAY
 
 # Additional debug info after DEBUG is defined
 print("DATABASE_URL exists:", bool(os.getenv("DATABASE_URL")))
 print("RAILWAY_STATIC_URL exists:", bool(os.getenv("RAILWAY_STATIC_URL")))
 print("DEBUG mode:", DEBUG)
+print("IS_RAILWAY:", IS_RAILWAY)
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+
+# Add Railway domain automatically
+if os.getenv('RAILWAY_STATIC_URL'):
+    railway_domain = os.getenv('RAILWAY_STATIC_URL').replace('https://', '').replace('http://', '').split('/')[0]
+    if railway_domain not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(railway_domain)
+
+print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
 
 
 # Application definition
@@ -208,6 +223,10 @@ STATIC_URL = 'static/'
 # Production static files configuration
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Railway static files configuration
+if os.getenv('RAILWAY_STATIC_URL'):
+    STATIC_URL = os.getenv('RAILWAY_STATIC_URL')
+
 # Additional locations of static files
 STATICFILES_DIRS = [
     BASE_DIR / "static",
@@ -263,6 +282,14 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
+
+# Add Railway domain automatically to CSRF
+if os.getenv('RAILWAY_STATIC_URL'):
+    railway_url = os.getenv('RAILWAY_STATIC_URL').rstrip('/')
+    if railway_url not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(railway_url)
+
+print("CSRF_TRUSTED_ORIGINS:", CSRF_TRUSTED_ORIGINS)
 
 if not DEBUG:
     # Production security settings

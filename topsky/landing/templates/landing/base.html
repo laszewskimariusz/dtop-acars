@@ -10,64 +10,106 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS CDN (fallback) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        slate: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            200: '#e2e8f0',
-                            300: '#cbd5e1',
-                            400: '#94a3b8',
-                            500: '#64748b',
-                            600: '#475569',
-                            700: '#334155',
-                            800: '#1e293b',
-                            900: '#0f172a',
-                            950: '#020617'
-                        }
-                    },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
-                        'float': 'float 3s ease-in-out infinite',
-                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
-                    },
-                    keyframes: {
-                        fadeInUp: {
-                            from: {
-                                opacity: '0',
-                                transform: 'translateY(30px)'
-                            },
-                            to: {
-                                opacity: '1',
-                                transform: 'translateY(0)'
-                            }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-10px)' }
-                        },
-                        'pulse-glow': {
-                            '0%, 100%': { boxShadow: '0 0 20px rgba(34, 211, 238, 0.3)' },
-                            '50%': { boxShadow: '0 0 40px rgba(34, 211, 238, 0.6)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Styles -->
+    <!-- Tailwind CSS -->
     {% tailwind_css %}
     
     <style>
         * {
             font-family: 'DM Sans', sans-serif;
+        }
+        
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .animate-slide-in-left {
+            animation: slideInLeft 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .animate-slide-in-right {
+            animation: slideInRight 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-600 { animation-delay: 0.6s; }
+        .delay-800 { animation-delay: 0.8s; }
+
+        /* Grid pattern */
+        .grid-pattern {
+            background-image: 
+                linear-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #22d3ee, #3b82f6, #8b5cf6);
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.125);
         }
     </style>
     

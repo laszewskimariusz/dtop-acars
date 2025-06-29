@@ -18,12 +18,19 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.contrib.auth import views as auth_views
+from django.http import HttpResponse
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
 
+def health_check(request):
+    return HttpResponse("OK", content_type="text/plain")
+
 urlpatterns = [
+    # Health check
+    path('health/', health_check, name='health_check'),
+    
     # Admin
     path('admin/', admin.site.urls),
     

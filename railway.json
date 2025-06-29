@@ -1,5 +1,10 @@
 {
   "build": {
     "builder": "DOCKERFILE"
+  },
+  "deploy": {
+    "healthcheckPath": "/health/",
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE"
   }
 } 
