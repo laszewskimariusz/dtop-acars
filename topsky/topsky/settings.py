@@ -69,7 +69,7 @@ print("SECRET_KEY length:", len(SECRET_KEY) if SECRET_KEY else 0)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Temporary DEBUG=True to diagnose 502 errors
-DEBUG = True  # os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Additional debug info after DEBUG is defined
 print("DATABASE_URL exists:", bool(os.getenv("DATABASE_URL")))
@@ -94,16 +94,16 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    # 'tailwind',  # Temporarily disabled for debugging
-    # 'theme',     # Temporarily disabled for debugging
+    'tailwind',  # Re-enabled for tailwind_tags
+    'theme',     # Re-enabled for tailwind_tags
     'landing',
     'accounts',
     'acars',
 ]
 
 # Add browser reload in development - disabled for Railway debugging
-# if DEBUG:
-#     INSTALLED_APPS += ['django_browser_reload']
+if DEBUG:
+    INSTALLED_APPS += ['django_browser_reload']
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -117,8 +117,8 @@ MIDDLEWARE = [
 ]
 
 # Add browser reload middleware in development - disabled for Railway debugging
-# if DEBUG:
-#     MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']
+if DEBUG:
+    MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']
 
 ROOT_URLCONF = 'topsky.urls'
 
