@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from urllib.parse import urlparse, parse_qsl
+import warnings
+
+# Suppress pkg_resources deprecation warning
+warnings.filterwarnings("ignore", category=UserWarning, module="rest_framework_simplejwt")
 
 # load_dotenv is ONLY for local dev
 if os.getenv("RAILWAY_STATIC_URL") is None:
