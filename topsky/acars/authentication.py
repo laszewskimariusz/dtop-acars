@@ -11,7 +11,8 @@ class SmartCARSAuthentication(BaseAuthentication):
     """
     SmartCARS authentication backend supporting:
     1. Email/Password authentication 
-    2. Email/API Key authentication
+    2. Username/Password authentication
+    3. Email/API Key authentication
     """
     
     def authenticate(self, request):
@@ -25,26 +26,43 @@ class SmartCARSAuthentication(BaseAuthentication):
                 return None
                 
             auth_decoded = base64.b64decode(auth_header[6:]).decode('utf-8')
-            email, password = auth_decoded.split(':', 1)
+            identifier, password = auth_decoded.split(':', 1)
         except (ValueError, UnicodeDecodeError):
             raise AuthenticationFailed('Invalid authentication header')
         
         # Try to authenticate user
-        user = self._authenticate_user(email, password)
+        user = self._authenticate_user(identifier, password)
         if user:
             return (user, None)
         
         return None
     
-    def _authenticate_user(self, email, password):
+    def _authenticate_user(self, identifier, password):
         """
-        Authenticate user by email/password or email/api_key
+        Authenticate user by email/password, username/password, or email/api_key
         """
+        # Try email first
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=identifier)
+            if self._check_user_credentials(user, password):
+                return user
         except User.DoesNotExist:
-            return None
+            pass
         
+        # Try username
+        try:
+            user = User.objects.get(username=identifier)
+            if self._check_user_credentials(user, password):
+                return user
+        except User.DoesNotExist:
+            pass
+        
+        return None
+    
+    def _check_user_credentials(self, user, password):
+        """
+        Check if password or API key is valid for user
+        """
         # First try regular password authentication
         if user.check_password(password):
             # Update last login for SmartCARS profile
@@ -54,34 +72,35 @@ class SmartCARSAuthentication(BaseAuthentication):
             except SmartcarsProfile.DoesNotExist:
                 # Create profile if it doesn't exist
                 SmartcarsProfile.get_or_create_for_user(user)
-            return user
+            return True
         
         # Then try API key authentication (for Discord/VATSIM SSO users)
         try:
             profile = user.smartcars_profile
             if profile.api_key == password:
                 profile.update_last_login()
-                return user
+                return True
         except SmartcarsProfile.DoesNotExist:
             pass
         
-        return None
+        return False
 
 
-def authenticate_smartcars_user(email, password):
+def authenticate_smartcars_user(identifier, password):
     """
     Helper function to authenticate SmartCARS user
+    Accepts email or username as identifier
     Returns user object or None
     """
     auth = SmartCARSAuthentication()
     
     # Create mock request with basic auth
     class MockRequest:
-        def __init__(self, email, password):
-            credentials = base64.b64encode(f"{email}:{password}".encode()).decode()
+        def __init__(self, identifier, password):
+            credentials = base64.b64encode(f"{identifier}:{password}".encode()).decode()
             self.META = {'HTTP_AUTHORIZATION': f'Basic {credentials}'}
     
-    mock_request = MockRequest(email, password)
+    mock_request = MockRequest(identifier, password)
     result = auth.authenticate(mock_request)
     
     return result[0] if result else None 
