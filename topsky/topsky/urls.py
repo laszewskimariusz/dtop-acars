@@ -32,10 +32,13 @@ urlpatterns = [
     
     # SmartCARS 3 API - Main endpoint for SmartCARS Central
     # This is the URL you put in SmartCARS Central as "Script URL"
+    # Both with and without trailing slash for SmartCARS compatibility
     path('api/smartcars/', include('acars.urls')),
+    path('api/smartcars', include('acars.urls')),
     
-    # Alternative ACARS endpoint
+    # Alternative ACARS endpoints
     path('acars/api/', include('acars.urls')),
+    path('acars/api', include('acars.urls')),
     
     # JWT Authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

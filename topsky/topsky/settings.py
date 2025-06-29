@@ -299,3 +299,7 @@ CORS_EXPOSE_HEADERS = [
 
 # Handle preflight requests properly
 CORS_PREFLIGHT_MAX_AGE = 86400
+
+# SmartCARS 3 compatibility - disable automatic slash appending
+# SmartCARS doesn't handle redirects well, so we need exact URL matches
+APPEND_SLASH = False
