@@ -1,7 +1,7 @@
 # Railway deployment Dockerfile
 FROM python:3.13-slim
 
-# Install Node.js, npm and curl
+# Install Node.js and npm
 RUN apt-get update && apt-get install -y \
     nodejs \
     npm \

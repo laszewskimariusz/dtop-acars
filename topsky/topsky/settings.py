@@ -89,6 +89,12 @@ print("DEBUG mode:", DEBUG)
 print("IS_RAILWAY:", IS_RAILWAY)
 print("PORT:", os.getenv("PORT", "8000"))
 
+# Check if Tailwind CSS files exist
+tailwind_css_path = os.path.join(BASE_DIR, 'theme', 'static', 'css', 'dist', 'styles.css')
+print("Tailwind CSS exists:", os.path.exists(tailwind_css_path))
+if os.path.exists(tailwind_css_path):
+    print("Tailwind CSS size:", os.path.getsize(tailwind_css_path), "bytes")
+
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # Add Railway domain automatically
@@ -102,7 +108,7 @@ if 'healthcheck.railway.app' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('healthcheck.railway.app')
 
 print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
-#print("STATIC_URL:", STATIC_URL)
+
 
 
 # Application definition
@@ -158,6 +164,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.debug',
             ],
         },
     },

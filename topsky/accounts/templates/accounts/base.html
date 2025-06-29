@@ -63,7 +63,11 @@
     </script>
     
     <!-- Styles -->
-    {% tailwind_css %}
+    {% if debug %}
+        {% tailwind_css %}
+    {% else %}
+        <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+    {% endif %}
     
     <style>
         * {
