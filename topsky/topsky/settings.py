@@ -89,12 +89,6 @@ print("DEBUG mode:", DEBUG)
 print("IS_RAILWAY:", IS_RAILWAY)
 print("PORT:", os.getenv("PORT", "8000"))
 
-# Check if Tailwind CSS files exist
-tailwind_css_path = os.path.join(BASE_DIR, 'theme', 'static', 'css', 'dist', 'styles.css')
-print("Tailwind CSS exists:", os.path.exists(tailwind_css_path))
-if os.path.exists(tailwind_css_path):
-    print("Tailwind CSS size:", os.path.getsize(tailwind_css_path), "bytes")
-
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # Add Railway domain automatically
@@ -126,8 +120,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'tailwind',  # Re-enabled for tailwind_tags
-    'theme',     # Re-enabled for tailwind_tags
+    # 'tailwind',  # Not needed with CDN
+    # 'theme',     # Not needed with CDN
     'landing',
     'accounts',
     'acars',
@@ -258,17 +252,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Tailwind CSS Configuration
-TAILWIND_APP_NAME = 'theme'
-
 # Platform-specific NPM configuration
 import platform
 print("Platform:", platform.system())
-if platform.system() == 'Windows':
-    NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
-else:
-    # For Railway/Linux
-    NPM_BIN_PATH = '/usr/bin/npm'
 
 # Email Configuration (Resend)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
