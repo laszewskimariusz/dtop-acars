@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -45,23 +46,46 @@ def login(request):
     Accepts email/password or email/api_key authentication
     """
     try:
+        # DEBUG: Log all request info
+        print(f"=== LOGIN DEBUG ===")
+        print(f"Content-Type: {request.content_type}")
+        print(f"Request headers: {dict(request.META)}")
+        print(f"POST data: {request.POST}")
+        print(f"Raw body: {request.body}")
+        
         # Parse JSON body
         if request.content_type == 'application/json':
             data = json.loads(request.body)
             email = data.get('email')
             password = data.get('password')
+            print(f"JSON data: {data}")
         else:
             # Try form data
             email = request.POST.get('email')
             password = request.POST.get('password')
+            print(f"Form data - email: {email}, password: [HIDDEN]")
+        
+        print(f"Extracted - email: {email}, password: {'[SET]' if password else '[EMPTY]'}")
         
         if not email or not password:
             return JsonResponse({
                 'error': 'Email and password are required'
             }, status=400)
         
+        # DEBUG: Check if user exists
+        try:
+            user_check = User.objects.get(email=email)
+            print(f"User found: {user_check.username} (ID: {user_check.id})")
+            print(f"User has_usable_password: {user_check.has_usable_password()}")
+        except ObjectDoesNotExist:
+            print(f"No user found with email: {email}")
+            return JsonResponse({
+                'error': 'Invalid credentials'
+            }, status=401)
+        
         # Authenticate user
         user = authenticate_smartcars_user(email, password)
+        print(f"Authentication result: {user}")
         
         if user:
             # Get or create SmartCARS profile
@@ -87,15 +111,18 @@ def login(request):
                 'session': profile.acars_token
             })
         else:
+            print("Authentication failed!")
             return JsonResponse({
                 'error': 'Invalid credentials'
             }, status=401)
             
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
         return JsonResponse({
             'error': 'Invalid JSON data'
         }, status=400)
     except Exception as e:
+        print(f"Login exception: {e}")
         return JsonResponse({
             'error': 'Internal server error'
         }, status=500)
