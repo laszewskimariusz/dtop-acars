@@ -1,112 +1,53 @@
+import uuid
+import secrets
 from django.db import models
 from django.contrib.auth.models import User
-import secrets
+from django.utils import timezone
 
 
 class SmartcarsProfile(models.Model):
     """
-    Profil SmartCARS dla użytkowników
-    Przechowuje osobny API key dla każdego użytkownika (niezależny od hasła Django)
+    SmartCARS profile for user authentication and ACARS integration
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Użytkownik")
-    api_key = models.CharField(max_length=64, unique=True, verbose_name="API Key SmartCARS")
-    acars_token = models.CharField(max_length=128, blank=True, verbose_name="Token ACARS", 
-                                  help_text="Dodatkowy token dla komunikacji ACARS")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data utworzenia")
-    last_used = models.DateTimeField(null=True, blank=True, verbose_name="Ostatnie użycie")
-    is_active = models.BooleanField(default=True, verbose_name="Aktywny")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='smartcars_profile')
+    api_key = models.CharField(max_length=64, unique=True, blank=True)
+    acars_token = models.CharField(max_length=64, unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_login = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        verbose_name = "Profil SmartCARS"
-        verbose_name_plural = "Profile SmartCARS"
+        db_table = 'acars_smartcars_profile'
+        verbose_name = 'SmartCARS Profile'
+        verbose_name_plural = 'SmartCARS Profiles'
     
     def __str__(self):
-        return f"SmartCARS: {self.user.username} ({self.api_key[:8]}...)"
+        return f"SmartCARS Profile for {self.user.username}"
     
     def save(self, *args, **kwargs):
         if not self.api_key:
-            # Generuj bezpieczny API key jeśli nie został podany
-            self.api_key = secrets.token_urlsafe(32)
+            self.api_key = self.generate_api_key()
         if not self.acars_token:
-            # Generuj bezpieczny ACARS token jeśli nie został podany
-            self.acars_token = secrets.token_urlsafe(48)
+            self.acars_token = self.generate_acars_token()
         super().save(*args, **kwargs)
+    
+    @staticmethod
+    def generate_api_key():
+        """Generate a secure API key"""
+        return secrets.token_hex(32)
+    
+    @staticmethod
+    def generate_acars_token():
+        """Generate a secure ACARS token"""
+        return secrets.token_hex(32)
     
     @classmethod
     def get_or_create_for_user(cls, user):
-        """Pobierz lub utwórz profil SmartCARS dla użytkownika"""
+        """Get or create SmartCARS profile for user"""
         profile, created = cls.objects.get_or_create(user=user)
         return profile
-
-
-class ACARSMessage(models.Model):
-    """
-    Model dla wiadomości ACARS (Aircraft Communications Addressing and Reporting System)
-    Przechowuje wszystkie dane pobierane z urządzeń/systemów ACARS
-    """
-    # Relacja do użytkownika
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Użytkownik")
     
-    # Podstawowe informacje o locie
-    aircraft_id = models.CharField(max_length=10, verbose_name="ID Samolotu")
-    flight_number = models.CharField(max_length=10, blank=True, verbose_name="Numer Lotu")
-    route = models.CharField(max_length=50, blank=True, verbose_name="Trasa")
-    
-    # Pozycja i parametry lotu
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name="Szerokość geograficzna")
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, verbose_name="Długość geograficzna")
-    altitude = models.IntegerField(null=True, blank=True, verbose_name="Wysokość (ft)")
-    speed = models.IntegerField(null=True, blank=True, verbose_name="Prędkość (kts)")
-    heading = models.IntegerField(null=True, blank=True, verbose_name="Kurs (°)")
-    
-    # Czasy OOOI (Out-Off-On-In)
-    time_off = models.TimeField(null=True, blank=True, verbose_name="Czas startu")
-    time_on = models.TimeField(null=True, blank=True, verbose_name="Czas lądowania")
-    
-    # Parametry silnika
-    engine_n1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name="N1 (%)")
-    engine_epr = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name="EPR")
-    fuel_flow = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, verbose_name="Przepływ paliwa (kg/h)")
-    
-    # Inne parametry lotu
-    pax_count = models.IntegerField(null=True, blank=True, verbose_name="Liczba pasażerów")
-    cost_index = models.IntegerField(null=True, blank=True, verbose_name="Indeks kosztów")
-    
-    # Parametry wiadomości ACARS
-    transmission_mode = models.CharField(max_length=4, blank=True, verbose_name="Tryb transmisji")
-    label = models.CharField(max_length=2, blank=True, verbose_name="Etykieta wiadomości")
-    msg_number = models.IntegerField(null=True, blank=True, verbose_name="Numer wiadomości")
-    
-    # Metadane
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Czas otrzymania")
-    direction = models.CharField(
-        max_length=4, 
-        choices=[
-            ('IN', 'Przychodzące'),
-            ('OUT', 'Wychodzące')
-        ],
-        verbose_name="Kierunek wiadomości"
-    )
-    
-    # Dodatkowe pola dla smartCARS API
-    message_type = models.CharField(max_length=20, default='ACARS', verbose_name="Typ wiadomości")
-    departure_airport = models.CharField(max_length=4, blank=True, verbose_name="Lotnisko startu")
-    arrival_airport = models.CharField(max_length=4, blank=True, verbose_name="Lotnisko lądowania")
-    flight_time = models.CharField(max_length=10, blank=True, verbose_name="Czas lotu")
-    distance = models.CharField(max_length=10, blank=True, verbose_name="Dystans")
-    
-    # Pełne dane JSON z urządzenia ACARS
-    payload = models.JSONField(null=True, blank=True, verbose_name="Pełne dane JSON")
-    
-    class Meta:
-        verbose_name = "Wiadomość ACARS"
-        verbose_name_plural = "Wiadomości ACARS"
-        ordering = ['-timestamp']
-        indexes = [
-            models.Index(fields=['user', '-timestamp']),
-            models.Index(fields=['aircraft_id', '-timestamp']),
-            models.Index(fields=['flight_number', '-timestamp']),
-        ]
-    
-    def __str__(self):
-        return f"ACARS {self.aircraft_id} - {self.flight_number or 'N/A'} ({self.timestamp.strftime('%Y-%m-%d %H:%M')})" 
+    def update_last_login(self):
+        """Update last login timestamp"""
+        self.last_login = timezone.now()
+        self.save(update_fields=['last_login']) 

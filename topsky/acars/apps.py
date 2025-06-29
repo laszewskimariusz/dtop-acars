@@ -4,7 +4,4 @@ from django.apps import AppConfig
 class AcarsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'acars'
-    verbose_name = 'ACARS System'
-    
-    def ready(self):
-        import acars.signals 
+    verbose_name = 'ACARS SmartCARS Integration' 

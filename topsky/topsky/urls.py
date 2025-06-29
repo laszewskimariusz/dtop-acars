@@ -22,49 +22,26 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from acars.smartcars_api import debug_login, acars_login
 
 urlpatterns = [
-    # SmartCARS 3 Official API endpoint - CRITICAL for ACARS login - FIRST in URL list
-    path('pilot/login', acars_login, name='smartcars3_pilot_login'),
-    path('pilot/login/', acars_login, name='smartcars3_pilot_login_slash'),
-    path('pilot-test/', acars_login, name='pilot_test'),  # Test endpoint
-    
+    # Admin
     path('admin/', admin.site.urls),
+    
+    # Authentication
     path('auth/', include('accounts.urls')),
     
-    # Standard PHPvMS5 compatible endpoints for SmartCARS
-    path('api/acars-login/', acars_login, name='phpvms5_acars_login'),
-    path('api/acars-login', acars_login, name='phpvms5_acars_login_no_slash'),
+    # SmartCARS 3 API - Main endpoint for SmartCARS Central
+    # This is the URL you put in SmartCARS Central as "Script URL"
+    path('api/smartcars/', include('acars.urls')),
     
-    # Debug endpoint
-    path('api/debug-login/', debug_login, name='debug_acars_login'),
-    path('api/debug-login', debug_login, name='debug_acars_login_no_slash'), 
+    # Alternative ACARS endpoint
+    path('acars/api/', include('acars.urls')),
     
     # JWT Authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
-    # JWT Authentication endpoints (zgodnie z wymaganiami ACARS)
-    path('api/auth/login/', TokenObtainPairView.as_view(), name='acars_login'),
-    path('api/auth/refresh/', TokenRefreshView.as_view(), name='acars_refresh'),
-    
-    # ACARS API (legacy)
-    path('acars/', include('acars.urls')),
-    
-    # Official smartCARS 3 API (1:1 compatible with phpVMS)
-    path('api/smartcars/', include('acars.phpvms_urls')),
-    
-    # smartCARS 3 compatibility - handle URL without trailing slash
-    re_path(r'^api/smartcars$', include('acars.phpvms_urls')),
-    
-    # Topsky Plugin API - Custom smartCARS implementation
-    path('api/topskyplugin/', include('acars.topsky_plugin_urls')),
-    
-    # ACARS Bridge Plugin API
-    path('api/', include('acars.acars_bridge_urls')),
-    
-    # URL aliases for Django's password reset email templates (without namespace)
+    # Django's password reset email templates URLs (without namespace)
     path('auth/password-reset/done/', 
          auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'),
          name='password_reset_done'),
@@ -75,6 +52,7 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
          name='password_reset_complete'),
     
+    # Landing page (home)
     path('', include('landing.urls')),
 ]
 

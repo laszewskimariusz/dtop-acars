@@ -1,94 +1,33 @@
 from django.contrib import admin
-from .models import ACARSMessage, SmartcarsProfile
-
-
-@admin.register(ACARSMessage)
-class ACARSMessageAdmin(admin.ModelAdmin):
-    """
-    Panel administracyjny dla wiadomości ACARS
-    """
-    list_display = [
-        'timestamp', 'user', 'aircraft_id', 'flight_number', 
-        'direction', 'latitude', 'longitude', 'altitude', 'speed'
-    ]
-    list_filter = [
-        'direction', 'timestamp', 'aircraft_id', 'user'
-    ]
-    search_fields = [
-        'aircraft_id', 'flight_number', 'user__username', 'user__email'
-    ]
-    readonly_fields = ['timestamp']
-    ordering = ['-timestamp']
-    date_hierarchy = 'timestamp'
-    
-    fieldsets = (
-        ('Informacje podstawowe', {
-            'fields': ('user', 'timestamp', 'direction')
-        }),
-        ('Lot', {
-            'fields': ('aircraft_id', 'flight_number', 'route')
-        }),
-        ('Pozycja i parametry', {
-            'fields': ('latitude', 'longitude', 'altitude', 'speed', 'heading')
-        }),
-        ('Czas', {
-            'fields': ('time_off', 'time_on')
-        }),
-        ('Silnik', {
-            'fields': ('engine_n1', 'engine_epr', 'fuel_flow')
-        }),
-        ('Inne', {
-            'fields': ('pax_count', 'cost_index')
-        }),
-        ('ACARS', {
-            'fields': ('transmission_mode', 'label', 'msg_number')
-        }),
-        ('Dane surowe', {
-            'fields': ('payload',),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def get_queryset(self, request):
-        """
-        Optymalizuje zapytania do bazy danych
-        """
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(user=request.user)
+from .models import SmartcarsProfile
 
 
 @admin.register(SmartcarsProfile)
 class SmartcarsProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'api_key_preview', 'acars_token_preview', 'is_active', 'created_at', 'last_used')
-    list_filter = ('is_active', 'created_at', 'last_used')
-    search_fields = ('user__username', 'user__email', 'api_key', 'acars_token')
-    readonly_fields = ('created_at', 'last_used')
+    list_display = ('user', 'created_at', 'last_login', 'api_key_short')
+    list_filter = ('created_at', 'last_login')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('api_key', 'acars_token', 'created_at', 'updated_at')
+    
     fieldsets = (
-        ('Informacje podstawowe', {
-            'fields': ('user', 'is_active')
+        ('User Information', {
+            'fields': ('user',)
         }),
-        ('Tokeny i klucze', {
-            'fields': ('api_key', 'acars_token'),
-            'description': 'API Key służy do logowania w SmartCARS. ACARS Token służy do komunikacji z systemem ACARS.'
+        ('SmartCARS Credentials', {
+            'fields': ('api_key', 'acars_token')
         }),
-        ('Metadane', {
-            'fields': ('created_at', 'last_used'),
-            'classes': ('collapse',)
-        })
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'last_login')
+        }),
     )
     
-    def api_key_preview(self, obj):
-        return f"{obj.api_key[:8]}..." if obj.api_key else "N/A"
-    api_key_preview.short_description = "API Key"
+    def api_key_short(self, obj):
+        """Show shortened API key for security"""
+        if obj.api_key:
+            return f"{obj.api_key[:8]}...{obj.api_key[-8:]}"
+        return "No API key"
+    api_key_short.short_description = "API Key"
     
-    def acars_token_preview(self, obj):
-        return f"{obj.acars_token[:12]}..." if obj.acars_token else "N/A"
-    acars_token_preview.short_description = "ACARS Token"
-    
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(user=request.user) 
+    def has_delete_permission(self, request, obj=None):
+        # Prevent accidental deletion of profiles
+        return request.user.is_superuser 

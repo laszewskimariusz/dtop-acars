@@ -1,33 +1,33 @@
 from rest_framework import serializers
-from .models import ACARSMessage
+from django.contrib.auth.models import User
+from .models import SmartcarsProfile
 
 
-class ACARSMessageSerializer(serializers.ModelSerializer):
-    """
-    Serializer dla modelu ACARSMessage
-    Automatycznie przypisuje użytkownika na podstawie uwierzytelnionego użytkownika
-    """
+class APIInfoSerializer(serializers.Serializer):
+    """Serializer for API info endpoint"""
+    name = serializers.CharField()
+    version = serializers.CharField()
+    
+    
+class LoginSerializer(serializers.Serializer):
+    """Serializer for login endpoint"""
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Basic user serializer for SmartCARS API"""
     
     class Meta:
-        model = ACARSMessage
-        fields = '__all__'
-        read_only_fields = ('user', 'timestamp')
-        
-    def create(self, validated_data):
-        """
-        Tworzy nową wiadomość ACARS z automatycznym przypisaniem użytkownika
-        """
-        # Użytkownik jest automatycznie przypisywany w widoku
-        return super().create(validated_data)
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 
-class ACARSMessageReadSerializer(serializers.ModelSerializer):
-    """
-    Serializer tylko do odczytu z dodatkowymi informacjami o użytkowniku
-    """
-    user_username = serializers.CharField(source='user.username', read_only=True)
-    user_email = serializers.CharField(source='user.email', read_only=True)
+class SmartcarsProfileSerializer(serializers.ModelSerializer):
+    """SmartCARS profile serializer"""
+    user = UserSerializer(read_only=True)
     
     class Meta:
-        model = ACARSMessage
-        fields = '__all__' 
+        model = SmartcarsProfile
+        fields = ['api_key', 'acars_token', 'created_at', 'last_login', 'user']
+        read_only_fields = ['api_key', 'acars_token', 'created_at', 'last_login'] 
