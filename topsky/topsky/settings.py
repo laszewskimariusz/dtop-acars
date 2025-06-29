@@ -114,17 +114,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
+    # 'django.contrib.sites',  # Commented for debugging
+    # 'rest_framework',  # Commented for debugging
+    # 'rest_framework.authtoken',  # Commented for debugging
+    # 'rest_framework_simplejwt',  # Commented for debugging
+    # 'rest_framework_simplejwt.token_blacklist',  # Commented for debugging
+    # 'corsheaders',  # Commented for debugging
     # 'tailwind',  # Not needed with CDN
     # 'theme',     # Not needed with CDN
     'landing',
-    'accounts',
-    'acars',
+    # 'accounts',  # Commented for debugging
+    # 'acars',  # Commented for debugging
 ]
 
 # Add browser reload in development - disabled for Railway debugging
@@ -132,7 +132,7 @@ if DEBUG:
     INSTALLED_APPS += ['django_browser_reload']
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',  # Commented for debugging
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

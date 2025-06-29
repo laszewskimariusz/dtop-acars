@@ -14,13 +14,13 @@ def register_view(request):
             user = form.save()
             username = form.cleaned_data.get('username')
             
-            # Utwórz profil SmartCARS dla nowego użytkownika
-            try:
-                from acars.models import SmartcarsProfile
-                profile = SmartcarsProfile.get_or_create_for_user(user)
-                messages.info(request, f'ACARS profile created with API key: {profile.api_key[:8]}...')
-            except Exception as e:
-                messages.warning(request, 'Account was created, but there was an issue setting up ACARS profile.')
+            # Utwórz profil SmartCARS dla nowego użytkownika - commented for debugging
+            # try:
+            #     from acars.models import SmartcarsProfile
+            #     profile = SmartcarsProfile.get_or_create_for_user(user)
+            #     messages.info(request, f'ACARS profile created with API key: {profile.api_key[:8]}...')
+            # except Exception as e:
+            #     messages.warning(request, 'Account was created, but there was an issue setting up ACARS profile.')
             
             # Send welcome email
             try:
@@ -61,20 +61,20 @@ def login_view(request):
 
 @login_required
 def dashboard_view(request):
-    # Pobierz lub utwórz profil SmartCARS użytkownika
-    try:
-        from acars.models import SmartcarsProfile
-        smartcars_profile = SmartcarsProfile.get_or_create_for_user(request.user)
-    except Exception as e:
-        # Fallback - spróbuj utworzyć ręcznie
-        try:
-            from acars.models import SmartcarsProfile
-            smartcars_profile = SmartcarsProfile.objects.create(user=request.user)
-        except:
-            smartcars_profile = None
+    # Pobierz lub utwórz profil SmartCARS użytkownika - commented for debugging
+    # try:
+    #     from acars.models import SmartcarsProfile
+    #     smartcars_profile = SmartcarsProfile.get_or_create_for_user(request.user)
+    # except Exception as e:
+    #     # Fallback - spróbuj utworzyć ręcznie
+    #     try:
+    #         from acars.models import SmartcarsProfile
+    #         smartcars_profile = SmartcarsProfile.objects.create(user=request.user)
+    #     except:
+    #         smartcars_profile = None
     
     context = {
         'user': request.user,
-        'smartcars_profile': smartcars_profile
+        # 'smartcars_profile': smartcars_profile  # Commented for debugging
     }
     return render(request, 'accounts/dashboard.html', context) 

@@ -17,12 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
-from django.contrib.auth import views as auth_views
+# from django.contrib.auth import views as auth_views  # Commented for debugging
 from django.http import HttpResponse
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+# from rest_framework_simplejwt.views import (  # Commented for debugging
+#     TokenObtainPairView,
+#     TokenRefreshView,
+# )
 
 def health_check(request):
     return HttpResponse("OK", content_type="text/plain", status=200)
@@ -34,33 +34,29 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # Authentication
-    path('auth/', include('accounts.urls')),
+    # Authentication - commented for debugging
+    # path('auth/', include('accounts.urls')),
     
-    # SmartCARS 3 API - Main endpoint for SmartCARS Central
-    # This is the URL you put in SmartCARS Central as "Script URL"
-    # Both with and without trailing slash for SmartCARS compatibility
-    path('api/smartcars/', include(('acars.urls', 'acars'), namespace='smartcars_main')),
-    path('api/smartcars', include(('acars.urls', 'acars'), namespace='smartcars_alt')),
+    # SmartCARS 3 API - commented for debugging
+    # path('api/smartcars/', include(('acars.urls', 'acars'), namespace='smartcars_main')),
+    # path('api/smartcars', include(('acars.urls', 'acars'), namespace='smartcars_alt')),
+    # path('acars/api/', include(('acars.urls', 'acars'), namespace='acars_main')),
+    # path('acars/api', include(('acars.urls', 'acars'), namespace='acars_alt')),
     
-    # Alternative ACARS endpoints
-    path('acars/api/', include(('acars.urls', 'acars'), namespace='acars_main')),
-    path('acars/api', include(('acars.urls', 'acars'), namespace='acars_alt')),
+    # JWT Authentication endpoints - commented for debugging
+    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
-    # JWT Authentication endpoints
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # Django's password reset email templates URLs (without namespace)
-    path('auth/password-reset/done/', 
-         auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'),
-         name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', 
-         auth_views.PasswordResetConfirmView.as_view(template_name='accounts/password_reset_confirm.html'),
-         name='password_reset_confirm'),
-    path('reset/done/', 
-         auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
-         name='password_reset_complete'),
+    # Django's password reset email templates URLs - commented for debugging
+    # path('auth/password-reset/done/', 
+    #      auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'),
+    #      name='password_reset_done'),
+    # path('reset/<uidb64>/<token>/', 
+    #      auth_views.PasswordResetConfirmView.as_view(template_name='accounts/password_reset_confirm.html'),
+    #      name='password_reset_confirm'),
+    # path('reset/done/', 
+    #      auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
+    #      name='password_reset_complete'),
     
     # Landing page (home)
     path('', include('landing.urls')),
