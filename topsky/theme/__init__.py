@@ -1,1 +1,1 @@
-default_app_config = 'theme.apps.ThemeConfig'
+default_app_config = 'theme.apps.ThemeConfig' 
