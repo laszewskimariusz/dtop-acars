@@ -18,6 +18,35 @@ import warnings
 # Suppress pkg_resources deprecation warning
 warnings.filterwarnings("ignore", category=UserWarning, module="rest_framework_simplejwt")
 
+# Logging configuration for debugging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
 # load_dotenv is ONLY for local dev
 if os.getenv("RAILWAY_STATIC_URL") is None:
     from dotenv import load_dotenv
@@ -39,7 +68,8 @@ if not SECRET_KEY:
 print("SECRET_KEY length:", len(SECRET_KEY) if SECRET_KEY else 0)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+# Temporary DEBUG=True to diagnose 502 errors
+DEBUG = True  # os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
@@ -169,6 +199,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Production static files configuration
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Additional locations of static files
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+] if os.path.exists(BASE_DIR / "static") else []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
