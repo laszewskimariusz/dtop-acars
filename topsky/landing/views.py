@@ -11,15 +11,23 @@ def home(request):
         logger.info(f"Request method: {request.method}")
         logger.info(f"User authenticated: {request.user.is_authenticated}")
         
-        context = {
-            'debug_info': {
-                'path': request.path,
-                'method': request.method,
-                'user_authenticated': request.user.is_authenticated,
-            }
-        }
+        # Simple test response without templates
+        return HttpResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Topsky Airlines - Test</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-slate-900 text-white p-8">
+            <h1 class="text-4xl font-bold mb-4">Topsky Airlines</h1>
+            <p class="text-xl">Test page - working!</p>
+            <p class="mt-4">Request path: """ + request.path + """</p>
+            <p>User authenticated: """ + str(request.user.is_authenticated) + """</p>
+        </body>
+        </html>
+        """, content_type="text/html")
         
-        return render(request, 'landing/landing.html', context)
     except Exception as e:
         logger.error(f"Error rendering landing page: {e}")
         logger.exception("Full traceback:")
