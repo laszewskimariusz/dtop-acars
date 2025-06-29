@@ -59,8 +59,8 @@ urlpatterns = [
     path('', include('landing.urls')),
 ]
 
-# Add django_browser_reload URLs in development
-if settings.DEBUG:
-    urlpatterns += [
-        path('__reload__/', include('django_browser_reload.urls')),
-    ]
+# Add django_browser_reload URLs in development - disabled for Railway debugging
+# if settings.DEBUG:
+#     urlpatterns += [
+#         path('__reload__/', include('django_browser_reload.urls')),
+#     ]

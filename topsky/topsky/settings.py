@@ -71,6 +71,11 @@ print("SECRET_KEY length:", len(SECRET_KEY) if SECRET_KEY else 0)
 # Temporary DEBUG=True to diagnose 502 errors
 DEBUG = True  # os.getenv('DEBUG', 'False').lower() == 'true'
 
+# Additional debug info after DEBUG is defined
+print("DATABASE_URL exists:", bool(os.getenv("DATABASE_URL")))
+print("RAILWAY_STATIC_URL exists:", bool(os.getenv("RAILWAY_STATIC_URL")))
+print("DEBUG mode:", DEBUG)
+
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 
@@ -89,16 +94,16 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'tailwind',
-    'theme',
+    # 'tailwind',  # Temporarily disabled for debugging
+    # 'theme',     # Temporarily disabled for debugging
     'landing',
     'accounts',
     'acars',
 ]
 
-# Add browser reload in development
-if DEBUG:
-    INSTALLED_APPS += ['django_browser_reload']
+# Add browser reload in development - disabled for Railway debugging
+# if DEBUG:
+#     INSTALLED_APPS += ['django_browser_reload']
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -111,9 +116,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Add browser reload middleware in development
-if DEBUG:
-    MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']
+# Add browser reload middleware in development - disabled for Railway debugging
+# if DEBUG:
+#     MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']
 
 ROOT_URLCONF = 'topsky.urls'
 
@@ -215,7 +220,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Tailwind CSS Configuration
 TAILWIND_APP_NAME = 'theme'
-NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
+
+# Platform-specific NPM configuration
+import platform
+print("Platform:", platform.system())
+if platform.system() == 'Windows':
+    NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
+else:
+    # For Railway/Linux
+    NPM_BIN_PATH = '/usr/bin/npm'
 
 # Email Configuration (Resend)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -246,6 +259,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://topsky.app',
     'https://www.topsky.app',
     'https://dtopsky.topsky.app',
+    'https://dtop-acars-production.up.railway.app',  # Railway domain
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
