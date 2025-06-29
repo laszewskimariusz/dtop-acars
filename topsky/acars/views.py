@@ -24,7 +24,8 @@ def api_info(request):
     data = {
         "name": "Topsky Virtual Airlines SmartCARS API",
         "version": "1.0.0",
-        "handler": "django",
+        "apiVersion": "1.0.0",
+        "handler": "django", 
         "description": "SmartCARS 3 API for Topsky Virtual Airlines",
         "endpoints": {
             "login": "/api/smartcars/login",
