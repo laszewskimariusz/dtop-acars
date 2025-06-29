@@ -4,6 +4,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def hello_world(request):
+    """Simple Hello World page for testing"""
+    return HttpResponse("Hello World! Railway is working!", content_type="text/plain")
+
 def home(request):
     try:
         logger.info("Attempting to render landing page")
