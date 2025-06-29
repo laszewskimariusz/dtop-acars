@@ -225,7 +225,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Railway static files configuration
 if os.getenv('RAILWAY_STATIC_URL'):
-    STATIC_URL = os.getenv('RAILWAY_STATIC_URL')
+    static_url = os.getenv('RAILWAY_STATIC_URL')
+    if not static_url.endswith('/'):
+        static_url += '/'
+    STATIC_URL = static_url
 
 # Additional locations of static files
 STATICFILES_DIRS = [
@@ -286,6 +289,8 @@ CSRF_TRUSTED_ORIGINS = [
 # Add Railway domain automatically to CSRF
 if os.getenv('RAILWAY_STATIC_URL'):
     railway_url = os.getenv('RAILWAY_STATIC_URL').rstrip('/')
+    if not railway_url.startswith('http'):
+        railway_url = 'https://' + railway_url.split('://')[-1]
     if railway_url not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(railway_url)
 
